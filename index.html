@@ -73,7 +73,6 @@ td, th {
 <br>
 <input type="number" id="trailaInicial" placeholder="Traila inicial">
 <input type="number" id="capacidad" placeholder="Camas por traila">
-<input type="number" id="camaManual" placeholder="Cama manual">
 </div>
 
 <div id="reader"></div>
@@ -144,36 +143,19 @@ function onScanSuccess(decodedText) {
         return;
     }
 
-   // SOLO inicializa una vez
-if (trailaActual === 0) {
-    trailaActual = parseInt(document.getElementById("trailaInicial").value) || 1;
-    camaActual = 0;
-}
+    if(trailaActual === 0){
+        trailaActual = parseInt(document.getElementById("trailaInicial").value);
+        camaActual = 0;
+    }
 
-// 🔥 LEER MANUAL SI EXISTE
-let trailaInput = parseInt(document.getElementById("trailaInicial").value);
-let camaInput = parseInt(document.getElementById("camaManual").value);
+    let capacidad = parseInt(document.getElementById("capacidad").value);
 
-// Si el usuario escribe traila → usarla
-if (!isNaN(trailaInput)) {
-    trailaActual = trailaInput;
-}
+    camaActual++;
 
-// Si el usuario escribe cama → usarla
-if (!isNaN(camaInput)) {
-    camaActual = camaInput;
-} else {
-    camaActual++; // automático si no escribe
-}
-
-// capacidad
-let capacidad = parseInt(document.getElementById("capacidad").value) || 1;
-
-// cambio automático de traila
-if (camaActual > capacidad) {
-    trailaActual++;
-    camaActual = 1;
-}
+    if(camaActual > capacidad){
+        trailaActual++;
+        camaActual = 1;
+    }
 
     let nombre = baseDatos[id] || "NO ENCONTRADO";
 
@@ -191,6 +173,14 @@ if (camaActual > capacidad) {
         <td>${hora}</td>
     </tr>`;
 
+    document.getElementById("tabla").innerHTML += fila;
+    document.getElementById("contador").innerText = registros.length;
+
+    document.getElementById("trailaActual").innerText = trailaActual;
+    document.getElementById("camaActual").innerText = camaActual;
+
+    feedback("ok");
+}
     document.getElementById("tabla").innerHTML += fila;
     document.getElementById("contador").innerText = registros.length;
 
