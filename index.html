@@ -71,8 +71,9 @@ td, th {
 <div class="top">
 <input type="file" id="excelFile">
 <br>
-<input type="number" id="trailaInicial" placeholder="Traila">
-<input type="number" id="capacidad" placeholder="Camas">
+<input type="number" id="trailaInicial" placeholder="Traila inicial">
+<input type="number" id="capacidad" placeholder="Camas por traila">
+
 </div>
 
 <div id="reader"></div>
@@ -82,7 +83,7 @@ td, th {
 
 <button onclick="reset()">🔄 Reiniciar</button>
 <button onclick="descargarExcel()">📥 Descargar</button>
-    <button onclick="camaVacia()">🛏️ Cama Vacía</button>
+<button onclick="camaVacia()">🛏️ Cama Vacía</button>
 
 <table>
 <thead>
@@ -143,53 +144,19 @@ function onScanSuccess(decodedText) {
         return;
     }
 
-   function camaVacia(){
-
-    // Si aún no inicia la traila
-    if (trailaActual === 0) {
-        trailaActual = parseInt(document.getElementById("trailaInicial").value) || 1;
+    if(trailaActual === 0){
+        trailaActual = parseInt(document.getElementById("trailaInicial").value);
         camaActual = 0;
     }
 
-    let capacidad = parseInt(document.getElementById("capacidad").value) || 1;
+    let capacidad = parseInt(document.getElementById("capacidad").value);
 
-    // Avanza cama
     camaActual++;
 
-    // Cambia de traila si se llena
-    if (camaActual > capacidad) {
+    if(camaActual > capacidad){
         trailaActual++;
         camaActual = 1;
     }
-
-    let hora = new Date().toLocaleTimeString();
-
-    // Guardar como vacío
-    registros.push({
-        id: "VACIO",
-        nombre: "SIN PERSONA",
-        trailaActual,
-        camaActual,
-        hora
-    });
-
-    // Pintar en tabla
-    let fila = `<tr>
-        <td>-</td>
-        <td>SIN PERSONA</td>
-        <td>${trailaActual}</td>
-        <td>${camaActual}</td>
-        <td>${hora}</td>
-    </tr>`;
-
-    document.getElementById("tabla").innerHTML += fila;
-
-    document.getElementById("contador").innerText = registros.length;
-    document.getElementById("trailaActual").innerText = trailaActual;
-    document.getElementById("camaActual").innerText = camaActual;
-
-    feedback("ok");
-}
 
     let nombre = baseDatos[id] || "NO ENCONTRADO";
 
@@ -207,14 +174,6 @@ function onScanSuccess(decodedText) {
         <td>${hora}</td>
     </tr>`;
 
-    document.getElementById("tabla").innerHTML += fila;
-    document.getElementById("contador").innerText = registros.length;
-
-    document.getElementById("trailaActual").innerText = trailaActual;
-    document.getElementById("camaActual").innerText = camaActual;
-
-    feedback("ok");
-}
     document.getElementById("tabla").innerHTML += fila;
     document.getElementById("contador").innerText = registros.length;
 
@@ -259,7 +218,7 @@ function descargarExcel() {
     a.download = "terraflux_registros.csv";
     a.click();
 }
-    function camaVacia(){
+function camaVacia(){
 
     // Si aún no inicia la traila
     if (trailaActual === 0) {
@@ -306,7 +265,6 @@ function descargarExcel() {
 
     feedback("ok");
 }
-
 </script>
 
 </body>
