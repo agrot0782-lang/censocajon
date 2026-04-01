@@ -73,6 +73,7 @@ td, th {
 <br>
 <input type="number" id="trailaInicial" placeholder="Traila inicial">
 <input type="number" id="capacidad" placeholder="Camas por traila">
+<input type="number" id="camaManual" placeholder="Cama manual">
 </div>
 
 <div id="reader"></div>
@@ -143,19 +144,36 @@ function onScanSuccess(decodedText) {
         return;
     }
 
-    if(trailaActual === 0){
-        trailaActual = parseInt(document.getElementById("trailaInicial").value);
-        camaActual = 0;
-    }
+   // SOLO inicializa una vez
+if (trailaActual === 0) {
+    trailaActual = parseInt(document.getElementById("trailaInicial").value) || 1;
+    camaActual = 0;
+}
 
-    let capacidad = parseInt(document.getElementById("capacidad").value);
+// 🔥 LEER MANUAL SI EXISTE
+let trailaInput = parseInt(document.getElementById("trailaInicial").value);
+let camaInput = parseInt(document.getElementById("camaManual").value);
 
-    camaActual++;
+// Si el usuario escribe traila → usarla
+if (!isNaN(trailaInput)) {
+    trailaActual = trailaInput;
+}
 
-    if(camaActual > capacidad){
-        trailaActual++;
-        camaActual = 1;
-    }
+// Si el usuario escribe cama → usarla
+if (!isNaN(camaInput)) {
+    camaActual = camaInput;
+} else {
+    camaActual++; // automático si no escribe
+}
+
+// capacidad
+let capacidad = parseInt(document.getElementById("capacidad").value) || 1;
+
+// cambio automático de traila
+if (camaActual > capacidad) {
+    trailaActual++;
+    camaActual = 1;
+}
 
     let nombre = baseDatos[id] || "NO ENCONTRADO";
 
