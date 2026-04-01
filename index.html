@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -105,7 +106,8 @@ let baseDatos = {};
 let registros = [];
 let ids = new Set();
 
-
+let trailaActual = 0;
+let camaActual = 0;
 
 // EXCEL
 document.getElementById('excelFile').addEventListener('change', function(e) {
@@ -141,7 +143,19 @@ function onScanSuccess(decodedText) {
         return;
     }
 
-   
+    if(trailaActual === 0){
+        trailaActual = parseInt(document.getElementById("trailaInicial").value);
+        camaActual = 0;
+    }
+
+    let capacidad = parseInt(document.getElementById("capacidad").value);
+
+    camaActual++;
+
+    if(camaActual > capacidad){
+        trailaActual++;
+        camaActual = 1;
+    }
 
     let nombre = baseDatos[id] || "NO ENCONTRADO";
 
