@@ -143,19 +143,53 @@ function onScanSuccess(decodedText) {
         return;
     }
 
-    if(trailaActual === 0){
-        trailaActual = parseInt(document.getElementById("trailaInicial").value);
+   function camaVacia(){
+
+    // Si aún no inicia la traila
+    if (trailaActual === 0) {
+        trailaActual = parseInt(document.getElementById("trailaInicial").value) || 1;
         camaActual = 0;
     }
 
-    let capacidad = parseInt(document.getElementById("capacidad").value);
+    let capacidad = parseInt(document.getElementById("capacidad").value) || 1;
 
+    // Avanza cama
     camaActual++;
 
-    if(camaActual > capacidad){
+    // Cambia de traila si se llena
+    if (camaActual > capacidad) {
         trailaActual++;
         camaActual = 1;
     }
+
+    let hora = new Date().toLocaleTimeString();
+
+    // Guardar como vacío
+    registros.push({
+        id: "VACIO",
+        nombre: "SIN PERSONA",
+        trailaActual,
+        camaActual,
+        hora
+    });
+
+    // Pintar en tabla
+    let fila = `<tr>
+        <td>-</td>
+        <td>SIN PERSONA</td>
+        <td>${trailaActual}</td>
+        <td>${camaActual}</td>
+        <td>${hora}</td>
+    </tr>`;
+
+    document.getElementById("tabla").innerHTML += fila;
+
+    document.getElementById("contador").innerText = registros.length;
+    document.getElementById("trailaActual").innerText = trailaActual;
+    document.getElementById("camaActual").innerText = camaActual;
+
+    feedback("ok");
+}
 
     let nombre = baseDatos[id] || "NO ENCONTRADO";
 
