@@ -143,9 +143,19 @@ function onScanSuccess(decodedText) {
     }
 
     
-    let trailaInicial = parseInt(document.getElementById("trailaInicial").value);
-       
+ if(trailaActual === 0){
+        trailaActual = parseInt(document.getElementById("trailaInicial").value);
+        camaActual = 0;
+    }
+
     let capacidad = parseInt(document.getElementById("capacidad").value);
+
+    camaActual=capacidad;
+
+    if(camaActual = capacidad){
+        trailaActual=trailaInicial;
+        camaActual = camaActual;
+    }
 
     
 
