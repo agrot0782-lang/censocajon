@@ -143,19 +143,20 @@ function onScanSuccess(decodedText) {
     }
 
     
- if(trailaActual === 0){
-        trailaActual = parseInt(document.getElementById("trailaInicial").value);
-        camaActual = 0;
-    }
+// Solo al inicio
+if (trailaActual === 0) {
+    trailaActual = parseInt(document.getElementById("trailaInicial").value) || 1;
+}
 
-    let capacidad = parseInt(document.getElementById("capacidad").value);
+// Leer valores manuales SIEMPRE
+let camaActual = parseInt(document.getElementById("cama").value) || 0;
+let capacidad = parseInt(document.getElementById("capacidad").value) || 1;
 
-    camaActual++;
-
-    if(camaActual > capacidad){
-        trailaActual++;
-        camaActual = 1;
-    }
+// Si se llena la capacidad → cambia traila
+if (camaActual > capacidad) {
+    trailaActual++;
+    camaActual = 1;
+}
 
     let nombre = baseDatos[id] || "NO ENCONTRADO";
 
