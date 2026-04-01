@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Terraflux Control</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+body {
+    font-family: Arial;
+    background: #0f172a;
+    color: white;
+    text-align: center;
+}
+
+h2 {
+    color: #22c55e;
+}
+
+#reader {
+    width: 320px;
+    margin: auto;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+input, button {
+    padding: 12px;
+    margin: 5px;
+    border-radius: 10px;
+    border: none;
+    font-size: 16px;
+}
+
+button {
+    background: #22c55e;
+    color: white;
+    font-weight: bold;
+}
+
+table {
+    width: 95%;
+    margin: auto;
+    margin-top: 15px;
+    border-collapse: collapse;
+    background: #1e293b;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+td, th {
+    padding: 10px;
+    border-bottom: 1px solid #334155;
+}
+
+.ok { background: #16a34a !important; }
+.error { background: #dc2626 !important; }
+
+.top {
+    margin-bottom: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🌱 Terraflux Control</h2>
+
+<div class="top">
+<input type="file" id="excelFile">
+<br>
+<input type="number" id="trailaInicial" placeholder="Traila inicial">
+<input type="number" id="capacidad" placeholder="Camas por traila">
+</div>
+
+<div id="reader"></div>
+
+<h3>Total: <span id="contador">0</span></h3>
+<h3>🚚 Traila: <span id="trailaActual">-</span> | 🛏️ Cama: <span id="camaActual">-</span></h3>
+
+<button onclick="reset()">🔄 Reiniciar</button>
+<button onclick="descargarExcel()">📥 Descargar</button>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+<th>Traila</th>
+<th>Cama</th>
+<th>Hora</th>
+</tr>
+</thead>
+<tbody id="tabla"></tbody>
+</table>
+
+<!-- 🔊 sonido -->
+<audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+
+<script>
+
+let baseDatos = {};
+let registros = [];
+let ids = new Set();
+
+
+
+// EXCEL
+document.getElementById('excelFile').addEventListener('change', function(e) {
+
+    let file = e.target.files[0];
+    let reader = new FileReader();
+
+    reader.onload = function(e) {
+        let data = new Uint8Array(e.target.result);
+        let workbook = XLSX.read(data, {type: 'array'});
+        let hoja = workbook.Sheets[workbook.SheetNames[0]];
+        let json = XLSX.utils.sheet_to_json(hoja);
+
+        baseDatos = {};
+
+        json.forEach(row => {
+            baseDatos[String(row.ID).trim()] = row.Nombre;
+        });
+
+        alert("Excel cargado ✅");
+    };
+
+    reader.readAsArrayBuffer(file);
+});
+
+// SCAN
+function onScanSuccess(decodedText) {
+
+    let id = decodedText.trim();
+
+    if(ids.has(id)){
+        feedback("error");
+        return;
+    }
+
+   
+
+    let nombre = baseDatos[id] || "NO ENCONTRADO";
+
+    ids.add(id);
+
+    let hora = new Date().toLocaleTimeString();
+
+    registros.push({id, nombre, trailaActual, camaActual, hora});
+
+    let fila = `<tr>
+        <td>${id}</td>
+        <td>${nombre}</td>
+        <td>${trailaActual}</td>
+        <td>${camaActual}</td>
+        <td>${hora}</td>
+    </tr>`;
+
+    document.getElementById("tabla").innerHTML += fila;
+    document.getElementById("contador").innerText = registros.length;
+
+    document.getElementById("trailaActual").innerText = trailaActual;
+    document.getElementById("camaActual").innerText = camaActual;
+
+    feedback("ok");
+}
+
+// FEEDBACK PRO
+function feedback(tipo){
+    document.body.className = tipo;
+    document.getElementById("beep").play();
+    setTimeout(()=>document.body.className="",200);
+}
+
+// RESET
+function reset(){
+    if(confirm("¿Reiniciar operación?")){
+        registros = [];
+        ids.clear();
+        trailaActual = 0;
+        camaActual = 0;
+        document.getElementById("tabla").innerHTML = "";
+        document.getElementById("contador").innerText = 0;
+    }
+}
+
+let scanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
+scanner.render(onScanSuccess);
+
+// EXPORT
+function descargarExcel() {
+    let contenido = "ID,Nombre,Traila,Cama,Hora\n";
+    registros.forEach(r => {
+        contenido += `${r.id},${r.nombre},${r.trailaActual},${r.camaActual},${r.hora}\n`;
+    });
+
+    let blob = new Blob([contenido], { type: 'text/csv' });
+    let a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = "terraflux_registros.csv";
+    a.click();
+}
+
+</script>
+
+</body>
+</html>
