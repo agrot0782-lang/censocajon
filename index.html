@@ -142,20 +142,15 @@ function onScanSuccess(decodedText) {
         return;
     }
 
-    if(trailaActual =0){
-        trailaActual = parseInt(document.getElementById("trailaInicial").value);
-        camaActual = 0;
-    }
-
+    
+    let trailaActual = parseInt(document.getElementById("trailaInicial").value);
+       
     let capacidad = parseInt(document.getElementById("capacidad").value);
 
-    camaActual=capacidad;
+    
 
     
-    if(camaActual = capacidad){
-        trailaActual=trailaInicial;
-        camaActual = capacidad;
-    }
+  
 
     let nombre = baseDatos[id] || "NO ENCONTRADO";
 
