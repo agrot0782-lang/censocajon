@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -142,8 +141,8 @@ function onScanSuccess(decodedText) {
         feedback("error");
         return;
     }
-    
-if(trailaActual === 0){
+
+    if(trailaActual === 0){
         trailaActual = parseInt(document.getElementById("trailaInicial").value=Text);
         camaActual = 0;
     }
@@ -156,7 +155,6 @@ if(trailaActual === 0){
         trailaActual++;
         camaActual = 1;
     }
-    
 
     let nombre = baseDatos[id] || "NO ENCONTRADO";
 
