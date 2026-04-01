@@ -66,7 +66,7 @@ td, th {
 
 <body>
 
-<h2>🌱 Terraflux Control</h2>
+<h2><img src="terraflux.png" width="100" height="30"></h2>
 
 <div class="top">
 <input type="file" id="excelFile">
@@ -142,17 +142,18 @@ function onScanSuccess(decodedText) {
         return;
     }
 
-    if(trailaActual === 0){
+    if(trailaActual =0){
         trailaActual = parseInt(document.getElementById("trailaInicial").value);
         camaActual = 0;
     }
 
     let capacidad = parseInt(document.getElementById("capacidad").value);
 
-    camaActual++;
+    camaActual=capacidad;
 
-    if(camaActual > capacidad){
-        trailaActual++;
+    
+    if(camaActual = capacidad){
+        trailaActual=trailaInicial;
         camaActual = 1;
     }
 
