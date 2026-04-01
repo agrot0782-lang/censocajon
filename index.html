@@ -72,8 +72,8 @@ td, th {
 <div class="top">
 <input type="file" id="excelFile">
 <br>
-<input type="number" id="trailaInicial" placeholder="Traila inicial">
-<input type="number" id="capacidad" placeholder="Camas por traila">
+<input type="text" id="trailaInicial" placeholder="Traila inicial">
+<input type="text" id="capacidad" placeholder="Camas por traila">
 </div>
 
 <div id="reader"></div>
@@ -144,11 +144,11 @@ function onScanSuccess(decodedText) {
     }
 
     if(trailaActual === 0){
-        trailaActual = parseInt(document.getElementById("trailaInicial").value=text);
+        trailaActual = parseInt(document.getElementById("trailaInicial").value=0);
         camaActual = 0;
     }
 
-    let capacidad = parseInt(document.getElementById("capacidad").value=text);
+    let capacidad = parseInt(document.getElementById("capacidad").value=0);
 
     camaActual++;
 
