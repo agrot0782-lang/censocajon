@@ -142,16 +142,17 @@ function onScanSuccess(decodedText) {
         feedback("error");
         return;
     }
+    
+ let trailaInicial = parseInt(document.getElementById("trailaInicial").value);
 
-    if(trailaActual = trailaActual){
-        trailaActual = parseInt(document.getElementById("trailaInicial").value);
-        camaActual = 0;
+    trailaActual;    
+    if(trailaActual = trailaInicial){
+        trailaActual = trailaInicial;
+        camaActual = capacidad;
     }
 
     let capacidad = parseInt(document.getElementById("capacidad").value);
-
     camaActual;
-
     if(camaActual = capacidad){
         trailaActual=trailaInicial;
         camaActual = capacidad;
