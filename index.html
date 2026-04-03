@@ -92,25 +92,23 @@ td, th {
 <th>Traila</th>
 <th>Cama</th>
 <th>Hora</th>
+<th>Acción</th>
 </tr>
 </thead>
 <tbody id="tabla"></tbody>
 </table>
 
-<!-- 🔊 sonido -->
 <audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
 
 <script>
 
-
-
 let baseDatos = {};
 let registros = [];
 let ids = new Set();
+let camasOcupadas = new Set();
 
 // EXCEL
 document.getElementById('excelFile').addEventListener('change', function(e) {
-
     let file = e.target.files[0];
     let reader = new FileReader();
 
@@ -121,7 +119,6 @@ document.getElementById('excelFile').addEventListener('change', function(e) {
         let json = XLSX.utils.sheet_to_json(hoja);
 
         baseDatos = {};
-
         json.forEach(row => {
             baseDatos[String(row.ID).trim()] = row.Nombre;
         });
@@ -142,7 +139,6 @@ function onScanSuccess(decodedText) {
         return;
     }
 
-    // 🔥 TOMAR VALORES MANUALES
     let trailaActual = document.getElementById("trailaInicial").value;
     let camaActual = document.getElementById("capacidad").value;
 
@@ -151,9 +147,18 @@ function onScanSuccess(decodedText) {
         return;
     }
 
+    let clave = trailaActual + "-" + camaActual;
+
+    if(camasOcupadas.has(clave)){
+        alert("⚠️ Cama ya ocupada en esta traila");
+        feedback("error");
+        return;
+    }
+
     let nombre = baseDatos[id] || "NO ENCONTRADO";
 
     ids.add(id);
+    camasOcupadas.add(clave);
 
     let hora = new Date().toLocaleTimeString();
 
@@ -165,6 +170,7 @@ function onScanSuccess(decodedText) {
         <td>${trailaActual}</td>
         <td>${camaActual}</td>
         <td>${hora}</td>
+        <td><button onclick="borrar('${id}', this)">❌</button></td>
     </tr>`;
 
     document.getElementById("tabla").innerHTML += fila;
@@ -174,6 +180,33 @@ function onScanSuccess(decodedText) {
     document.getElementById("camaActual").innerText = camaActual;
 
     feedback("ok");
+}
+
+// BORRAR
+function borrar(id, btn){
+
+    if(!confirm("¿Borrar este registro?")) return;
+
+    let registro = registros.find(r => r.id === id);
+
+    if(registro){
+
+        // 🔥 limpiar texto " - VACÍA"
+        let camaLimpia = String(registro.camaActual).replace(" - VACÍA", "");
+
+        let clave = registro.trailaActual + "-" + camaLimpia;
+
+        camasOcupadas.delete(clave);
+    }
+
+    registros = registros.filter(r => r.id !== id);
+    ids.delete(id);
+
+    btn.closest("tr").remove();
+
+    document.getElementById("contador").innerText = registros.length;
+
+    feedback("error");
 }
 
 // FEEDBACK
@@ -188,6 +221,7 @@ function reset(){
     if(confirm("¿Reiniciar operación?")){
         registros = [];
         ids.clear();
+        camasOcupadas.clear();
         document.getElementById("tabla").innerHTML = "";
         document.getElementById("contador").innerText = 0;
     }
@@ -210,6 +244,7 @@ function descargarExcel() {
     a.click();
 }
 
+// CAMA VACÍA
 function camaVacia() {
 
     let trailaActual = document.getElementById("trailaInicial").value;
@@ -219,6 +254,16 @@ function camaVacia() {
         alert("Ingresa traila y cama");
         return;
     }
+
+    let clave = trailaActual + "-" + camaActual;
+
+    if(camasOcupadas.has(clave)){
+        alert("⚠️ Cama ya ocupada");
+        feedback("error");
+        return;
+    }
+
+    camasOcupadas.add(clave);
 
     let id = "N/A";
     let nombre = "N/A";
@@ -238,6 +283,7 @@ function camaVacia() {
         <td>${trailaActual}</td>
         <td>${camaActual} - VACÍA</td>
         <td>${hora}</td>
+        <td><button onclick="borrar('${id}', this)">❌</button></td>
     </tr>`;
 
     document.getElementById("tabla").innerHTML += fila;
