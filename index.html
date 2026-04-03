@@ -11,6 +11,9 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
+<!-- 📊 GRAFICA -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 body {
     font-family: Arial;
@@ -18,8 +21,15 @@ body {
     color: white;
     text-align: center;
 }
+
 h2 { color: #22c55e; }
-#reader { width: 320px; margin: auto; border-radius: 15px; overflow: hidden; }
+
+#reader {
+    width: 320px;
+    margin: auto;
+    border-radius: 15px;
+    overflow: hidden;
+}
 
 input, button {
     padding: 12px;
@@ -29,7 +39,11 @@ input, button {
     font-size: 16px;
 }
 
-button { background: #22c55e; color: white; font-weight: bold; }
+button {
+    background: #22c55e;
+    color: white;
+    font-weight: bold;
+}
 
 table {
     width: 95%;
@@ -45,10 +59,26 @@ td, th {
     border-bottom: 1px solid #334155;
 }
 
-.ok { background: #16a34a !important; }
-.error { background: #dc2626 !important; }
-
 .top { margin-bottom: 10px; }
+
+.card {
+    background:#1e293b;
+    padding:10px 20px;
+    border-radius:10px;
+    width:120px;
+}
+
+.card h4 {
+    margin:0;
+    font-size:12px;
+    color:#94a3b8;
+}
+
+.card span {
+    font-size:22px;
+    font-weight:bold;
+    color:#22c55e;
+}
 </style>
 </head>
 
@@ -72,6 +102,16 @@ td, th {
 <button onclick="reset()">🔄 Reiniciar</button>
 <button onclick="descargarExcel()">📥 Descargar</button>
 
+<!-- 🔥 DASHBOARD -->
+<div id="dashboard" style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap; margin:15px;">
+  <div class="card"><h4>Total</h4><span id="dTotal">0</span></div>
+  <div class="card"><h4>Ocupadas</h4><span id="dOcupadas">0</span></div>
+  <div class="card"><h4>Vacías</h4><span id="dVacias">0</span></div>
+  <div class="card"><h4>Trailas</h4><span id="dTrailas">0</span></div>
+</div>
+
+<canvas id="grafica" style="max-width:500px; margin:auto;"></canvas>
+
 <table>
 <thead>
 <tr>
@@ -90,7 +130,6 @@ td, th {
 
 <script>
 
-// 🔥 CONFIG FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyA0J5FQsMU0XGhQ0WTD_M1iuXQ71T2caFs",
   authDomain: "terraflux-control.firebaseapp.com",
@@ -105,28 +144,7 @@ let baseDatos = {};
 let registros = [];
 let ids = new Set();
 let camasOcupadas = new Set();
-
-// EXCEL
-document.getElementById('excelFile').addEventListener('change', function(e) {
-    let file = e.target.files[0];
-    let reader = new FileReader();
-
-    reader.onload = function(e) {
-        let data = new Uint8Array(e.target.result);
-        let workbook = XLSX.read(data, {type: 'array'});
-        let hoja = workbook.Sheets[workbook.SheetNames[0]];
-        let json = XLSX.utils.sheet_to_json(hoja);
-
-        baseDatos = {};
-        json.forEach(row => {
-            baseDatos[String(row.ID).trim()] = row.Nombre;
-        });
-
-        alert("Excel cargado ✅");
-    };
-
-    reader.readAsArrayBuffer(file);
-});
+let chart;
 
 // SCAN
 function onScanSuccess(decodedText) {
@@ -149,7 +167,7 @@ function onScanSuccess(decodedText) {
     let clave = trailaActual + "-" + camaActual;
 
     if(camasOcupadas.has(clave)){
-        alert("⚠️ Cama ya ocupada");
+        alert("⚠️ Cama ocupada");
         feedback("error");
         return;
     }
@@ -163,15 +181,12 @@ function onScanSuccess(decodedText) {
 
     let registro = {id, nombre, trailaActual, camaActual, hora};
 
-    registros.push(registro);
-
-    // 🔥 GUARDAR EN FIREBASE
     db.ref("terraflux/" + id).set(registro);
 
     feedback("ok");
 }
 
-// 🔄 ESCUCHA TIEMPO REAL
+// 🔄 TIEMPO REAL
 db.ref("terraflux").on("value", snapshot => {
 
     let data = snapshot.val();
@@ -197,74 +212,86 @@ db.ref("terraflux").on("value", snapshot => {
             <td>${r.trailaActual}</td>
             <td>${r.camaActual}</td>
             <td>${r.hora}</td>
-            <td><button onclick="borrar('${r.id}', this)">❌</button></td>
+            <td><button onclick="borrar('${r.id}')">❌</button></td>
         </tr>`;
 
         document.getElementById("tabla").innerHTML += fila;
     });
 
     document.getElementById("contador").innerText = registros.length;
+
+    actualizarDashboard(data);
 });
 
-// BORRAR
-function borrar(id, btn){
+// DASHBOARD
+function actualizarDashboard(data){
 
-    if(!confirm("¿Borrar?")) return;
+    let lista = Object.values(data || {});
+    
+    let total = lista.length;
+    let vacias = lista.filter(r => String(r.camaActual).includes("VACÍA")).length;
+    let ocupadas = total - vacias;
 
-    db.ref("terraflux/" + id).remove();
+    let trailas = new Set(lista.map(r => r.trailaActual));
+
+    document.getElementById("dTotal").innerText = total;
+    document.getElementById("dOcupadas").innerText = ocupadas;
+    document.getElementById("dVacias").innerText = vacias;
+    document.getElementById("dTrailas").innerText = trailas.size;
+
+    let datos = {
+        labels: ["Ocupadas","Vacías"],
+        datasets: [{ data: [ocupadas, vacias] }]
+    };
+
+    if(chart){
+        chart.data = datos;
+        chart.update();
+        return;
+    }
+
+    chart = new Chart(document.getElementById("grafica"), {
+        type: "doughnut",
+        data: datos
+    });
 }
 
-// FEEDBACK
-function feedback(tipo){
-    document.body.className = tipo;
-    document.getElementById("beep").play();
-    setTimeout(()=>document.body.className="",500);
+// BORRAR
+function borrar(id){
+    db.ref("terraflux/" + id).remove();
 }
 
 // RESET
 function reset(){
-    if(confirm("Reiniciar TODO?")){
+    if(confirm("Reiniciar todo?")){
         db.ref("terraflux").remove();
     }
 }
 
-let scanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
-scanner.render(onScanSuccess);
-
-// EXPORT
-function descargarExcel() {
-    let contenido = "ID,Nombre,Traila,Cama,Hora\n";
-    registros.forEach(r => {
-        contenido += `${r.id},${r.nombre},${r.trailaActual},${r.camaActual},${r.hora}\n`;
-    });
-
-    let blob = new Blob([contenido], { type: 'text/csv' });
-    let a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = "terraflux_registros.csv";
-    a.click();
-}
-
 // CAMA VACÍA
-function camaVacia() {
-
+function camaVacia(){
     let trailaActual = document.getElementById("trailaInicial").value;
     let camaActual = document.getElementById("capacidad").value;
 
     let id = "VACIA_" + Date.now();
-    let nombre = "N/A";
-    let hora = new Date().toLocaleTimeString();
 
-    let registro = {
+    db.ref("terraflux/" + id).set({
         id,
-        nombre,
+        nombre:"N/A",
         trailaActual,
         camaActual: camaActual + " - VACÍA",
-        hora
-    };
-
-    db.ref("terraflux/" + id).set(registro);
+        hora:new Date().toLocaleTimeString()
+    });
 }
+
+function feedback(tipo){
+    document.body.className = tipo;
+    document.getElementById("beep").play();
+    setTimeout(()=>document.body.className="",300);
+}
+
+let scanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
+scanner.render(onScanSuccess);
 
 </script>
 </body>
