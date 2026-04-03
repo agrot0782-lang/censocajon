@@ -73,6 +73,7 @@ td, th {
 <br>
 <input type="number" id="trailaInicial" placeholder="Traila inicial">
 <input type="number" id="capacidad" placeholder="Camas por traila">
+<button onclick="camaVacia()">🛏️ Cama Vacía</button>
 </div>
 
 <div id="reader"></div>
@@ -207,6 +208,45 @@ function descargarExcel() {
     a.href = URL.createObjectURL(blob);
     a.download = "terraflux_registros.csv";
     a.click();
+}
+
+function camaVacia() {
+
+    let trailaActual = document.getElementById("trailaInicial").value;
+    let camaActual = document.getElementById("capacidad").value;
+
+    if(!trailaActual || !camaActual){
+        alert("Ingresa traila y cama");
+        return;
+    }
+
+    let id = "N/A";
+    let nombre = "N/A";
+    let hora = new Date().toLocaleTimeString();
+
+    registros.push({
+        id,
+        nombre,
+        trailaActual,
+        camaActual: camaActual + " - VACÍA",
+        hora
+    });
+
+    let fila = `<tr>
+        <td>${id}</td>
+        <td>${nombre}</td>
+        <td>${trailaActual}</td>
+        <td>${camaActual} - VACÍA</td>
+        <td>${hora}</td>
+    </tr>`;
+
+    document.getElementById("tabla").innerHTML += fila;
+    document.getElementById("contador").innerText = registros.length;
+
+    document.getElementById("trailaActual").innerText = trailaActual;
+    document.getElementById("camaActual").innerText = camaActual + " - VACÍA";
+
+    feedback("ok");
 }
 
 </script>
