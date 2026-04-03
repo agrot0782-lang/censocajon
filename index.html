@@ -7,6 +7,10 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
+<!-- 🔥 FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
 <style>
 body {
     font-family: Arial;
@@ -14,17 +18,8 @@ body {
     color: white;
     text-align: center;
 }
-
-h2 {
-    color: #22c55e;
-}
-
-#reader {
-    width: 320px;
-    margin: auto;
-    border-radius: 15px;
-    overflow: hidden;
-}
+h2 { color: #22c55e; }
+#reader { width: 320px; margin: auto; border-radius: 15px; overflow: hidden; }
 
 input, button {
     padding: 12px;
@@ -34,11 +29,7 @@ input, button {
     font-size: 16px;
 }
 
-button {
-    background: #22c55e;
-    color: white;
-    font-weight: bold;
-}
+button { background: #22c55e; color: white; font-weight: bold; }
 
 table {
     width: 95%;
@@ -47,7 +38,6 @@ table {
     border-collapse: collapse;
     background: #1e293b;
     border-radius: 10px;
-    overflow: hidden;
 }
 
 td, th {
@@ -58,15 +48,13 @@ td, th {
 .ok { background: #16a34a !important; }
 .error { background: #dc2626 !important; }
 
-.top {
-    margin-bottom: 10px;
-}
+.top { margin-bottom: 10px; }
 </style>
 </head>
 
 <body>
 
-<h2><img src="terraflux.png" width="100" height="30"></h2>
+<h2><img src="terraflux.png" width="100"></h2>
 
 <div class="top">
 <input type="file" id="excelFile">
@@ -101,6 +89,17 @@ td, th {
 <audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
 
 <script>
+
+// 🔥 CONFIG FIREBASE
+const firebaseConfig = {
+  apiKey: "AIzaSyA0J5FQsMU0XGhQ0WTD_M1iuXQ71T2caFs",
+  authDomain: "terraflux-control.firebaseapp.com",
+  databaseURL: "https://terraflux-control-default-rtdb.firebaseio.com",
+  projectId: "terraflux-control"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
 let baseDatos = {};
 let registros = [];
@@ -150,7 +149,7 @@ function onScanSuccess(decodedText) {
     let clave = trailaActual + "-" + camaActual;
 
     if(camasOcupadas.has(clave)){
-        alert("⚠️ Cama ya ocupada en esta traila");
+        alert("⚠️ Cama ya ocupada");
         feedback("error");
         return;
     }
@@ -162,68 +161,70 @@ function onScanSuccess(decodedText) {
 
     let hora = new Date().toLocaleTimeString();
 
-    registros.push({id, nombre, trailaActual, camaActual, hora});
+    let registro = {id, nombre, trailaActual, camaActual, hora};
 
-    let fila = `<tr>
-        <td>${id}</td>
-        <td>${nombre}</td>
-        <td>${trailaActual}</td>
-        <td>${camaActual}</td>
-        <td>${hora}</td>
-        <td><button onclick="borrar('${id}', this)">❌</button></td>
-    </tr>`;
+    registros.push(registro);
 
-    document.getElementById("tabla").innerHTML += fila;
-    document.getElementById("contador").innerText = registros.length;
-
-    document.getElementById("trailaActual").innerText = trailaActual;
-    document.getElementById("camaActual").innerText = camaActual;
+    // 🔥 GUARDAR EN FIREBASE
+    db.ref("terraflux/" + id).set(registro);
 
     feedback("ok");
 }
 
+// 🔄 ESCUCHA TIEMPO REAL
+db.ref("terraflux").on("value", snapshot => {
+
+    let data = snapshot.val();
+    if(!data) return;
+
+    registros = [];
+    ids.clear();
+    camasOcupadas.clear();
+    document.getElementById("tabla").innerHTML = "";
+
+    Object.values(data).forEach(r => {
+
+        let camaLimpia = String(r.camaActual).replace(" - VACÍA","");
+        let clave = r.trailaActual + "-" + camaLimpia;
+
+        ids.add(r.id);
+        camasOcupadas.add(clave);
+        registros.push(r);
+
+        let fila = `<tr>
+            <td>${r.id}</td>
+            <td>${r.nombre}</td>
+            <td>${r.trailaActual}</td>
+            <td>${r.camaActual}</td>
+            <td>${r.hora}</td>
+            <td><button onclick="borrar('${r.id}', this)">❌</button></td>
+        </tr>`;
+
+        document.getElementById("tabla").innerHTML += fila;
+    });
+
+    document.getElementById("contador").innerText = registros.length;
+});
+
 // BORRAR
 function borrar(id, btn){
 
-    if(!confirm("¿Borrar este registro?")) return;
+    if(!confirm("¿Borrar?")) return;
 
-    let registro = registros.find(r => r.id === id);
-
-    if(registro){
-
-        // 🔥 limpiar texto " - VACÍA"
-        let camaLimpia = String(registro.camaActual).replace(" - VACÍA", "");
-
-        let clave = registro.trailaActual + "-" + camaLimpia;
-
-        camasOcupadas.delete(clave);
-    }
-
-    registros = registros.filter(r => r.id !== id);
-    ids.delete(id);
-
-    btn.closest("tr").remove();
-
-    document.getElementById("contador").innerText = registros.length;
-
-    feedback("error");
+    db.ref("terraflux/" + id).remove();
 }
 
 // FEEDBACK
 function feedback(tipo){
     document.body.className = tipo;
     document.getElementById("beep").play();
-    setTimeout(()=>document.body.className="",200);
+    setTimeout(()=>document.body.className="",500);
 }
 
 // RESET
 function reset(){
-    if(confirm("¿Reiniciar operación?")){
-        registros = [];
-        ids.clear();
-        camasOcupadas.clear();
-        document.getElementById("tabla").innerHTML = "";
-        document.getElementById("contador").innerText = 0;
+    if(confirm("Reiniciar TODO?")){
+        db.ref("terraflux").remove();
     }
 }
 
@@ -250,49 +251,19 @@ function camaVacia() {
     let trailaActual = document.getElementById("trailaInicial").value;
     let camaActual = document.getElementById("capacidad").value;
 
-    if(!trailaActual || !camaActual){
-        alert("Ingresa traila y cama");
-        return;
-    }
-
-    let clave = trailaActual + "-" + camaActual;
-
-    if(camasOcupadas.has(clave)){
-        alert("⚠️ Cama ya ocupada");
-        feedback("error");
-        return;
-    }
-
-    camasOcupadas.add(clave);
-
-    let id = "N/A";
+    let id = "VACIA_" + Date.now();
     let nombre = "N/A";
     let hora = new Date().toLocaleTimeString();
 
-    registros.push({
+    let registro = {
         id,
         nombre,
         trailaActual,
         camaActual: camaActual + " - VACÍA",
         hora
-    });
+    };
 
-    let fila = `<tr>
-        <td>${id}</td>
-        <td>${nombre}</td>
-        <td>${trailaActual}</td>
-        <td>${camaActual} - VACÍA</td>
-        <td>${hora}</td>
-        <td><button onclick="borrar('${id}', this)">❌</button></td>
-    </tr>`;
-
-    document.getElementById("tabla").innerHTML += fila;
-    document.getElementById("contador").innerText = registros.length;
-
-    document.getElementById("trailaActual").innerText = trailaActual;
-    document.getElementById("camaActual").innerText = camaActual + " - VACÍA";
-
-    feedback("ok");
+    db.ref("terraflux/" + id).set(registro);
 }
 
 </script>
