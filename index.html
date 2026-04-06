@@ -7,10 +7,6 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<!-- 🔥 FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
 <!-- 📊 GRAFICA -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -21,7 +17,6 @@ body {
     color: white;
     text-align: center;
 }
-
 h2 { color: #22c55e; }
 
 #reader {
@@ -51,7 +46,6 @@ table {
     margin-top: 15px;
     border-collapse: collapse;
     background: #1e293b;
-    border-radius: 10px;
 }
 
 td, th {
@@ -59,58 +53,26 @@ td, th {
     border-bottom: 1px solid #334155;
 }
 
-.top { margin-bottom: 10px; }
-
 .card {
     background:#1e293b;
     padding:10px 20px;
     border-radius:10px;
     width:120px;
 }
-
-.card h4 {
-    margin:0;
-    font-size:12px;
-    color:#94a3b8;
-}
-
-.card span {
-    font-size:22px;
-    font-weight:bold;
-    color:#22c55e;
-}
 </style>
 </head>
 
 <body>
 
-<h2><img src="terraflux.png" width="100"></h2>
+<h2>Terraflux Control</h2>
 
-<div class="top">
-<input type="file" id="excelFile">
-<br>
 <input type="number" id="trailaInicial" placeholder="Traila inicial">
 <input type="number" id="capacidad" placeholder="Camas por traila">
 <button onclick="camaVacia()">🛏️ Cama Vacía</button>
-</div>
 
 <div id="reader"></div>
 
 <h3>Total: <span id="contador">0</span></h3>
-<h3>🚚 Traila: <span id="trailaActual">-</span> | 🛏️ Cama: <span id="camaActual">-</span></h3>
-
-<button onclick="reset()">🔄 Reiniciar</button>
-<button onclick="descargarExcel()">📥 Descargar</button>
-
-<!-- 🔥 DASHBOARD -->
-<div id="dashboard" style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap; margin:15px;">
-  <div class="card"><h4>Total</h4><span id="dTotal">0</span></div>
-  <div class="card"><h4>Ocupadas</h4><span id="dOcupadas">0</span></div>
-  <div class="card"><h4>Vacías</h4><span id="dVacias">0</span></div>
-  <div class="card"><h4>Trailas</h4><span id="dTrailas">0</span></div>
-</div>
-
-<canvas id="grafica" style="max-width:500px; margin:auto;"></canvas>
 
 <table>
 <thead>
@@ -126,90 +88,80 @@ td, th {
 <tbody id="tabla"></tbody>
 </table>
 
-<audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
-
 <script>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA0J5FQsMU0XGhQ0WTD_M1iuXQ71T2caFs",
-  authDomain: "terraflux-database.firebaseapp.com",
-  projectId: "terraflux-database",
-  storageBucket: "terraflux-database.firebasestorage.app",
-  messagingSenderId: "1055680733887",
-  appId: "1:1055680733887:web:d39244fba881aee2461c0a",
-  measurementId: "G-1R5L5Z7058"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-let baseDatos = {};
-let registros = [];
 let ids = new Set();
 let camasOcupadas = new Set();
 let chart;
 
+// 🔥 LOCAL STORAGE
+function guardar(data){
+    localStorage.setItem("terraflux", JSON.stringify(data));
+}
+
+function obtener(){
+    return JSON.parse(localStorage.getItem("terraflux")) || {};
+}
+
 // SCAN
-function onScanSuccess(decodedText) {
+function onScanSuccess(decodedText){
 
     let id = decodedText.trim();
 
     if(ids.has(id)){
-        feedback("error");
+        alert("Duplicado");
         return;
     }
 
-    let trailaActual = document.getElementById("trailaInicial").value;
-    let camaActual = document.getElementById("capacidad").value;
+    let traila = document.getElementById("trailaInicial").value;
+    let cama = document.getElementById("capacidad").value;
 
-    if(!trailaActual || !camaActual){
-        alert("Ingresa traila y cama");
+    if(!traila || !cama){
+        alert("Faltan datos");
         return;
     }
 
-    let clave = trailaActual + "-" + camaActual;
+    let clave = traila + "-" + cama;
 
     if(camasOcupadas.has(clave)){
-        alert("⚠️ Cama ocupada");
-        feedback("error");
+        alert("Cama ocupada");
         return;
     }
 
-    let nombre = baseDatos[id] || "NO ENCONTRADO";
+    let data = obtener();
 
-    ids.add(id);
-    camasOcupadas.add(clave);
+    data[id] = {
+        id,
+        nombre:"OK",
+        trailaActual:traila,
+        camaActual:cama,
+        hora:new Date().toLocaleTimeString()
+    };
 
-    let hora = new Date().toLocaleTimeString();
-
-    let registro = {id, nombre, trailaActual, camaActual, hora};
-
-    db.ref("terraflux/" + id).set(registro);
-
-    feedback("ok");
+    guardar(data);
+    render();
 }
 
-// 🔄 TIEMPO REAL
-db.ref("terraflux").on("value", snapshot => {
+// RENDER
+function render(){
 
-    let data = snapshot.val();
-    if(!data) return;
+    let data = obtener();
 
-    registros = [];
     ids.clear();
     camasOcupadas.clear();
-    document.getElementById("tabla").innerHTML = "";
+
+    let tabla = document.getElementById("tabla");
+    tabla.innerHTML = "";
 
     Object.values(data).forEach(r => {
 
-        let camaLimpia = String(r.camaActual).replace(" - VACÍA","");
-        let clave = r.trailaActual + "-" + camaLimpia;
+        let clave = r.trailaActual + "-" + r.camaActual;
 
         ids.add(r.id);
         camasOcupadas.add(clave);
-        registros.push(r);
 
-        let fila = `<tr>
+        tabla.innerHTML += `
+        <tr>
             <td>${r.id}</td>
             <td>${r.nombre}</td>
             <td>${r.trailaActual}</td>
@@ -217,85 +169,54 @@ db.ref("terraflux").on("value", snapshot => {
             <td>${r.hora}</td>
             <td><button onclick="borrar('${r.id}')">❌</button></td>
         </tr>`;
-
-        document.getElementById("tabla").innerHTML += fila;
     });
 
-    document.getElementById("contador").innerText = registros.length;
-
-    actualizarDashboard(data);
-});
-
-// DASHBOARD
-function actualizarDashboard(data){
-
-    let lista = Object.values(data || {});
-    
-    let total = lista.length;
-    let vacias = lista.filter(r => String(r.camaActual).includes("VACÍA")).length;
-    let ocupadas = total - vacias;
-
-    let trailas = new Set(lista.map(r => r.trailaActual));
-
-    document.getElementById("dTotal").innerText = total;
-    document.getElementById("dOcupadas").innerText = ocupadas;
-    document.getElementById("dVacias").innerText = vacias;
-    document.getElementById("dTrailas").innerText = trailas.size;
-
-    let datos = {
-        labels: ["Ocupadas","Vacías"],
-        datasets: [{ data: [ocupadas, vacias] }]
-    };
-
-    if(chart){
-        chart.data = datos;
-        chart.update();
-        return;
-    }
-
-    chart = new Chart(document.getElementById("grafica"), {
-        type: "doughnut",
-        data: datos
-    });
+    document.getElementById("contador").innerText = Object.keys(data).length;
 }
 
 // BORRAR
 function borrar(id){
-    db.ref("terraflux/" + id).remove();
+    let data = obtener();
+    delete data[id];
+    guardar(data);
+    render();
 }
 
 // RESET
 function reset(){
-    if(confirm("Reiniciar todo?")){
-        db.ref("terraflux").remove();
-    }
+    localStorage.removeItem("terraflux");
+    render();
 }
 
 // CAMA VACÍA
 function camaVacia(){
-    let trailaActual = document.getElementById("trailaInicial").value;
-    let camaActual = document.getElementById("capacidad").value;
+
+    let traila = document.getElementById("trailaInicial").value;
+    let cama = document.getElementById("capacidad").value;
 
     let id = "VACIA_" + Date.now();
 
-    db.ref("terraflux/" + id).set({
+    let data = obtener();
+
+    data[id] = {
         id,
         nombre:"N/A",
-        trailaActual,
-        camaActual: camaActual + " - VACÍA",
+        trailaActual:traila,
+        camaActual: cama + " - VACÍA",
         hora:new Date().toLocaleTimeString()
-    });
+    };
+
+    guardar(data);
+    render();
 }
 
-function feedback(tipo){
-    document.body.className = tipo;
-    document.getElementById("beep").play();
-    setTimeout(()=>document.body.className="",300);
-}
+// INICIO
+render();
 
-let scanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
+let scanner = new Html5QrcodeScanner("reader",{fps:10,qrbox:250});
 scanner.render(onScanSuccess);
 
 </script>
+
 </body>
 </html>
