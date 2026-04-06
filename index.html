@@ -7,7 +7,6 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<!-- 📊 GRAFICA -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -66,6 +65,8 @@ td, th {
 
 <h2>Terraflux Control</h2>
 
+<input type="file" id="excelFile">
+<br>
 <input type="number" id="trailaInicial" placeholder="Traila inicial">
 <input type="number" id="capacidad" placeholder="Camas por traila">
 <button onclick="camaVacia()">🛏️ Cama Vacía</button>
@@ -73,6 +74,19 @@ td, th {
 <div id="reader"></div>
 
 <h3>Total: <span id="contador">0</span></h3>
+<h3>🚚 Traila: <span id="trailaActual">-</span> | 🛏️ Cama: <span id="camaActual">-</span></h3>
+
+<button onclick="reset()">🔄 Reiniciar</button>
+<button onclick="descargarExcel()">📥 Descargar</button>
+
+<div id="dashboard" style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap; margin:15px;">
+  <div class="card"><h4>Total</h4><span id="dTotal">0</span></div>
+  <div class="card"><h4>Ocupadas</h4><span id="dOcupadas">0</span></div>
+  <div class="card"><h4>Vacías</h4><span id="dVacias">0</span></div>
+  <div class="card"><h4>Trailas</h4><span id="dTrailas">0</span></div>
+</div>
+
+<canvas id="grafica" style="max-width:500px; margin:auto;"></canvas>
 
 <table>
 <thead>
@@ -88,8 +102,12 @@ td, th {
 <tbody id="tabla"></tbody>
 </table>
 
+<audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+
 <script>
 
+let baseDatos = {};
+let registros = [];
 let ids = new Set();
 let camasOcupadas = new Set();
 let chart;
@@ -98,70 +116,72 @@ let chart;
 function guardar(data){
     localStorage.setItem("terraflux", JSON.stringify(data));
 }
-
 function obtener(){
     return JSON.parse(localStorage.getItem("terraflux")) || {};
 }
 
 // SCAN
-function onScanSuccess(decodedText){
+function onScanSuccess(decodedText) {
 
     let id = decodedText.trim();
 
     if(ids.has(id)){
-        alert("Duplicado");
+        feedback("error");
         return;
     }
 
-    let traila = document.getElementById("trailaInicial").value;
-    let cama = document.getElementById("capacidad").value;
+    let trailaActual = document.getElementById("trailaInicial").value;
+    let camaActual = document.getElementById("capacidad").value;
 
-    if(!traila || !cama){
-        alert("Faltan datos");
+    if(!trailaActual || !camaActual){
+        alert("Ingresa traila y cama");
         return;
     }
 
-    let clave = traila + "-" + cama;
+    let clave = trailaActual + "-" + camaActual;
 
     if(camasOcupadas.has(clave)){
-        alert("Cama ocupada");
+        alert("⚠️ Cama ocupada");
+        feedback("error");
         return;
     }
 
-    let data = obtener();
+    let nombre = baseDatos[id] || "NO ENCONTRADO";
 
-    data[id] = {
-        id,
-        nombre:"OK",
-        trailaActual:traila,
-        camaActual:cama,
-        hora:new Date().toLocaleTimeString()
-    };
+    ids.add(id);
+    camasOcupadas.add(clave);
+
+    let hora = new Date().toLocaleTimeString();
+
+    let data = obtener();
+    data[id] = {id, nombre, trailaActual, camaActual, hora};
 
     guardar(data);
     render();
+
+    feedback("ok");
 }
 
-// RENDER
+// 🔄 RENDER (ANTES ERA FIREBASE)
 function render(){
 
     let data = obtener();
 
+    registros = [];
     ids.clear();
     camasOcupadas.clear();
-
-    let tabla = document.getElementById("tabla");
-    tabla.innerHTML = "";
+    document.getElementById("tabla").innerHTML = "";
 
     Object.values(data).forEach(r => {
 
-        let clave = r.trailaActual + "-" + r.camaActual;
+        let camaLimpia = String(r.camaActual).replace(" - VACÍA","");
+        let clave = r.trailaActual + "-" + camaLimpia;
 
         ids.add(r.id);
         camasOcupadas.add(clave);
+        registros.push(r);
 
-        tabla.innerHTML += `
-        <tr>
+        let fila = `<tr>
             <td>${r.id}</td>
             <td>${r.nombre}</td>
             <td>${r.trailaActual}</td>
@@ -169,9 +189,46 @@ function render(){
             <td>${r.hora}</td>
             <td><button onclick="borrar('${r.id}')">❌</button></td>
         </tr>`;
+
+        document.getElementById("tabla").innerHTML += fila;
     });
 
-    document.getElementById("contador").innerText = Object.keys(data).length;
+    document.getElementById("contador").innerText = registros.length;
+
+    actualizarDashboard(data);
+}
+
+// DASHBOARD (igual)
+function actualizarDashboard(data){
+
+    let lista = Object.values(data || {});
+    
+    let total = lista.length;
+    let vacias = lista.filter(r => String(r.camaActual).includes("VACÍA")).length;
+    let ocupadas = total - vacias;
+
+    let trailas = new Set(lista.map(r => r.trailaActual));
+
+    document.getElementById("dTotal").innerText = total;
+    document.getElementById("dOcupadas").innerText = ocupadas;
+    document.getElementById("dVacias").innerText = vacias;
+    document.getElementById("dTrailas").innerText = trailas.size;
+
+    let datos = {
+        labels: ["Ocupadas","Vacías"],
+        datasets: [{ data: [ocupadas, vacias] }]
+    };
+
+    if(chart){
+        chart.data = datos;
+        chart.update();
+        return;
+    }
+
+    chart = new Chart(document.getElementById("grafica"), {
+        type: "doughnut",
+        data: datos
+    });
 }
 
 // BORRAR
@@ -184,15 +241,16 @@ function borrar(id){
 
 // RESET
 function reset(){
-    localStorage.removeItem("terraflux");
-    render();
+    if(confirm("Reiniciar todo?")){
+        localStorage.removeItem("terraflux");
+        render();
+    }
 }
 
 // CAMA VACÍA
 function camaVacia(){
-
-    let traila = document.getElementById("trailaInicial").value;
-    let cama = document.getElementById("capacidad").value;
+    let trailaActual = document.getElementById("trailaInicial").value;
+    let camaActual = document.getElementById("capacidad").value;
 
     let id = "VACIA_" + Date.now();
 
@@ -201,8 +259,8 @@ function camaVacia(){
     data[id] = {
         id,
         nombre:"N/A",
-        trailaActual:traila,
-        camaActual: cama + " - VACÍA",
+        trailaActual,
+        camaActual: camaActual + " - VACÍA",
         hora:new Date().toLocaleTimeString()
     };
 
@@ -210,13 +268,19 @@ function camaVacia(){
     render();
 }
 
+// SONIDO
+function feedback(tipo){
+    document.body.className = tipo;
+    document.getElementById("beep").play();
+    setTimeout(()=>document.body.className="",300);
+}
+
 // INICIO
 render();
 
-let scanner = new Html5QrcodeScanner("reader",{fps:10,qrbox:250});
+let scanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
 scanner.render(onScanSuccess);
 
 </script>
-
 </body>
 </html>
