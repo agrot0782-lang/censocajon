@@ -312,7 +312,26 @@ document.getElementById("excelFile").addEventListener("change", function(e){
 
     reader.readAsArrayBuffer(file);
 });
-    
+    function descargarExcel(){
+
+    let data = obtener(); // LocalStorage
+
+    let lista = Object.values(data);
+
+    if(lista.length === 0){
+        alert("No hay datos para descargar");
+        return;
+    }
+
+    // convertir a formato Excel
+    let ws = XLSX.utils.json_to_sheet(lista);
+    let wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(wb, ws, "Registros");
+
+    // descargar archivo
+    XLSX.writeFile(wb, "terraflux_registros.xlsx");
+}
 </script>
 </body>
 </html>
