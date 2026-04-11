@@ -2,336 +2,345 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Terraflux Control</title>
+<title>Censo de Camas</title>
 
+<!-- QR -->
 <script src="https://unpkg.com/html5-qrcode"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- 🔥 FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <style>
-body {
+body{
     font-family: Arial;
-    background: #0f172a;
-    color: white;
-    text-align: center;
+    background:#f4f6f9;
+    padding:20px;
 }
-h2 { color: #22c55e; }
-
-#reader {
-    width: 320px;
-    margin: auto;
-    border-radius: 15px;
-    overflow: hidden;
+.container{
+    max-width:900px;
+    margin:auto;
 }
-
-input, button {
-    padding: 12px;
-    margin: 5px;
-    border-radius: 10px;
-    border: none;
-    font-size: 16px;
+h2{
+    text-align:center;
 }
-
-button {
-    background: #22c55e;
-    color: white;
-    font-weight: bold;
+.form{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    margin-bottom:20px;
 }
-
-table {
-    width: 95%;
-    margin: auto;
-    margin-top: 15px;
-    border-collapse: collapse;
-    background: #1e293b;
+input{
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #ccc;
 }
-
-td, th {
-    padding: 10px;
-    border-bottom: 1px solid #334155;
+button{
+    padding:10px 15px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    color:white;
 }
+.btn-normal{ background:#007bff; }
+.btn-vacio{ background:#6c757d; }
+.btn-fuera{ background:#dc3545; }
 
-.card {
-    background:#1e293b;
-    padding:10px 20px;
+table{
+    width:100%;
+    background:white;
+    border-collapse:collapse;
     border-radius:10px;
-    width:120px;
+    overflow:hidden;
 }
+th{
+    background:#343a40;
+    color:white;
+    padding:10px;
+}
+td{
+    padding:8px;
+    border-bottom:1px solid #ddd;
+    text-align:center;
+}
+
+.vacio{ color:#6c757d; font-weight:bold; }
+.fuera{ color:#dc3545; font-weight:bold; }
+.ocupado{ color:#28a745; font-weight:bold; }
+
+.ok{ background:#d4edda !important; }
+.error{ background:#f8d7da !important; }
 </style>
 </head>
 
 <body>
 
-<h2>Terraflux Control</h2>
+<div class="container">
 
-<input type="file" id="excelFile">
-<br>
-<input type="number" id="trailaInicial" placeholder="Traila inicial">
-<input type="number" id="capacidad" placeholder="Camas por traila">
-<button onclick="camaVacia()">🛏️ Cama Vacía</button>
+<h2>🛏️ Censo Trailas Cajon</h2>
 
-<div id="reader"></div>
+<div id="reader" style="width:300px; margin:auto;"></div>
 
-<h3>Total: <span id="contador">0</span></h3>
-<h3>🚚 Traila: <span id="trailaActual">-</span> | 🛏️ Cama: <span id="camaActual">-</span></h3>
-
-<button onclick="reset()">🔄 Reiniciar</button>
-<button onclick="descargarExcel()">📥 Descargar</button>
-
-<div id="dashboard" style="display:flex; gap:15px; justify-content:center; flex-wrap:wrap; margin:15px;">
-  <div class="card"><h4>Total</h4><span id="dTotal">0</span></div>
-  <div class="card"><h4>Ocupadas</h4><span id="dOcupadas">0</span></div>
-  <div class="card"><h4>Vacías</h4><span id="dVacias">0</span></div>
-  <div class="card"><h4>Trailas</h4><span id="dTrailas">0</span></div>
+<!-- DASHBOARD -->
+<div style="display:flex; gap:15px; justify-content:center; margin:20px 0;">
+    <div>🟢 Ocupadas: <b id="ocupadas">0</b></div>
+    <div>⚪ Vacías: <b id="vacias">0</b></div>
+    <div>🔴 Fuera: <b id="fuera">0</b></div>
+    <div>📊 Total: <b id="total">0</b></div>
 </div>
 
-<canvas id="grafica" style="max-width:500px; margin:auto;"></canvas>
+<div class="form">
+<input type="number" id="traila" placeholder="Traila">
+<input type="number" id="cama" placeholder="Cama">
+
+<input type="text" id="idTrabajador" placeholder="ID">
+<input type="text" id="nombre" placeholder="Nombre">
+<input type="text" id="apellidos" placeholder="Apellidos">
+<input type="text" id="sexo" placeholder="Sexo">
+
+<input type="text" id="observacion" placeholder="Observaciones">
+
+<button class="btn-normal" onclick="registrar('OCUPADO')">Registrar</button>
+<button class="btn-vacio" onclick="registrar('VACIA')">Vacía</button>
+<button class="btn-fuera" onclick="registrar('FUERA')">Fuera</button>
+<button onclick="borrarTodo()" style="background:#000; margin-bottom:10px;">
+    🧨 Reiniciar Censo
+</button>
+</div>
 
 <table>
 <thead>
 <tr>
 <th>ID</th>
 <th>Nombre</th>
+<th>Apellidos</th>
 <th>Traila</th>
 <th>Cama</th>
-<th>Hora</th>
-<th>Acción</th>
+<th>Sexo</th>
+<th>Estado</th>
+<th>Observación</th>
+<th>Acciones</th>
 </tr>
 </thead>
 <tbody id="tabla"></tbody>
 </table>
 
-<audio id="beep" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+</div>
 
 <script>
 
-let baseDatos = {};
-let registros = [];
-let ids = new Set();
-let camasOcupadas = new Set();
-let chart;
+// 🔥 FIREBASE
+var firebaseConfig = {
+ apiKey: "AIzaSyDz4RqKjSJxB0F5eP4RzajQtW94cPXmpSg",
+    authDomain: "data-b6691.firebaseapp.com",
+    databaseURL: "https://data-b6691-default-rtdb.firebaseio.com",
+    projectId: "data-b6691",
+    storageBucket: "data-b6691.firebasestorage.app",
+    messagingSenderId: "932857865624",
+    appId: "1:932857865624:web:20408d56e0a821aae737ed",
+    measurementId: "G-G16TH0Y127"
+};
+firebase.initializeApp(firebaseConfig);
+var db = firebase.database();
 
-// 🔥 LOCAL STORAGE
-function guardar(data){
-    localStorage.setItem("terraflux", JSON.stringify(data));
-}
-function obtener(){
-    return JSON.parse(localStorage.getItem("terraflux")) || {};
-}
+let lista = [];
+let qr, ultimoID = "";
 
-// SCAN
-function onScanSuccess(decodedText) {
+// 🔥 REGISTRAR
+function registrar(estado){
 
-    let id = decodedText.trim();
+    let traila = document.getElementById("traila").value;
+    let cama = parseInt(document.getElementById("cama").value);
 
-    if(ids.has(id)){
-        feedback("error");
+    let id = document.getElementById("idTrabajador").value;
+    let nombre = document.getElementById("nombre").value;
+    let apellidos = document.getElementById("apellidos").value;
+    let sexo = document.getElementById("sexo").value;
+    let obs = document.getElementById("observacion").value;
+
+    if(!traila || !cama){
+        alert("Faltan datos");
         return;
     }
 
-    let trailaActual = document.getElementById("trailaInicial").value;
-    let camaActual = document.getElementById("capacidad").value;
-
-    if(!trailaActual || !camaActual){
-        alert("Ingresa traila y cama");
+    let existe = lista.some(p => p.traila == traila && p.cama == cama);
+    if(existe){
+        alert("Cama duplicada");
         return;
     }
 
-    let clave = trailaActual + "-" + camaActual;
-
-    if(camasOcupadas.has(clave)){
-        alert("⚠️ Cama ocupada");
-        feedback("error");
+    let existente = lista.find(p => p.id == id && p.estado === "OCUPADO");
+    if(existente){
+        document.body.classList.add("error");
+        setTimeout(()=>document.body.classList.remove("error"), 300);
+        beepError();
+        document.getElementById("idTrabajador").value = "";
         return;
     }
 
-    let nombre = baseDatos[id] || "NO ENCONTRADO";
+    lista.push({id,nombre,apellidos,traila,cama,sexo,estado,observacion:obs});
+let key = traila + "_" + cama;
 
-    ids.add(id);
-    camasOcupadas.add(clave);
+db.ref("censo_cajon/" + key).set({
+    id,
+    nombre,
+    apellidos,
+    traila,
+    cama,
+    sexo,
+    estado,
+    observacion: obs,
+    timestamp: Date.now()
+});
+    document.body.classList.add("ok");
+    setTimeout(()=>document.body.classList.remove("ok"), 300);
+    beepOK();
 
-    let hora = new Date().toLocaleTimeString();
-
-    let data = obtener();
-    data[id] = {id, nombre, trailaActual, camaActual, hora};
-
-    guardar(data);
+    limpiarCampos();
     render();
 
-    feedback("ok");
+    document.getElementById("cama").value = cama + 1;
+    document.getElementById("idTrabajador").focus();
 }
 
-// 🔄 RENDER (ANTES ERA FIREBASE)
+// LIMPIAR
+function limpiarCampos(){
+    document.getElementById("idTrabajador").value = "";
+    document.getElementById("nombre").value = "";
+    document.getElementById("apellidos").value = "";
+    document.getElementById("sexo").value = "";
+    document.getElementById("observacion").value = "";
+}
+
+// RENDER
 function render(){
 
-    let data = obtener();
+    let html = "";
 
-    registros = [];
-    ids.clear();
-    camasOcupadas.clear();
-    document.getElementById("tabla").innerHTML = "";
+    lista.forEach(p => {
 
-    Object.values(data).forEach(r => {
+        let clase = p.estado === "VACIA" ? "vacio" :
+                    p.estado === "FUERA" ? "fuera" : "ocupado";
 
-        let camaLimpia = String(r.camaActual).replace(" - VACÍA","");
-        let clave = r.trailaActual + "-" + camaLimpia;
-
-        ids.add(r.id);
-        camasOcupadas.add(clave);
-        registros.push(r);
-
-        let fila = `<tr>
-            <td>${r.id}</td>
-            <td>${r.nombre}</td>
-            <td>${r.trailaActual}</td>
-            <td>${r.camaActual}</td>
-            <td>${r.hora}</td>
-            <td><button onclick="borrar('${r.id}')">❌</button></td>
+        html += `
+        <tr>
+            <td>${p.id}</td>
+            <td>${p.nombre}</td>
+            <td>${p.apellidos}</td>
+            <td>${p.traila}</td>
+            <td>${p.cama}</td>
+            <td>${p.sexo}</td>
+            <td class="${clase}">${p.estado}</td>
+            <td>${p.observacion || "-"}</td>
+          <td><button onclick="eliminar(${i})" style="background:#dc3545;">🗑</button></td>
         </tr>`;
-
-        document.getElementById("tabla").innerHTML += fila;
     });
 
-    document.getElementById("contador").innerText = registros.length;
-
-    actualizarDashboard(data);
+    document.getElementById("tabla").innerHTML = html;
+    actualizarContadores();
 }
 
-// DASHBOARD (igual)
-function actualizarDashboard(data){
+// CONTADORES
+function actualizarContadores(){
+    let ocupadas=0,vacias=0,fuera=0;
 
-    let lista = Object.values(data || {});
-    
-    let total = lista.length;
-    let vacias = lista.filter(r => String(r.camaActual).includes("VACÍA")).length;
-    let ocupadas = total - vacias;
+    lista.forEach(p =>{
+        if(p.estado==="OCUPADO") ocupadas++;
+        else if(p.estado==="VACIA") vacias++;
+        else if(p.estado==="FUERA") fuera++;
+    });
 
-    let trailas = new Set(lista.map(r => r.trailaActual));
+    document.getElementById("ocupadas").innerText=ocupadas;
+    document.getElementById("vacias").innerText=vacias;
+    document.getElementById("fuera").innerText=fuera;
+    document.getElementById("total").innerText=lista.length;
+}
 
-    document.getElementById("dTotal").innerText = total;
-    document.getElementById("dOcupadas").innerText = ocupadas;
-    document.getElementById("dVacias").innerText = vacias;
-    document.getElementById("dTrailas").innerText = trailas.size;
+// RESET CAMA
+document.getElementById("traila").addEventListener("change",()=>{
+    document.getElementById("cama").value = 1;
+});
 
-    let datos = {
-        labels: ["Ocupadas","Vacías"],
-        datasets: [{ data: [ocupadas, vacias] }]
-    };
+// 🔥 ESCÁNER AUTO
+function iniciarEscaneo(){
 
-    if(chart){
-        chart.data = datos;
-        chart.update();
-        return;
-    }
+    qr = new Html5Qrcode("reader");
 
-    chart = new Chart(document.getElementById("grafica"), {
-        type: "doughnut",
-        data: datos
+    qr.start({ facingMode: "environment" }, { fps:10, qrbox:250 },
+    (decodedText)=>{
+
+        let id = decodedText.trim();
+        if(id === ultimoID) return;
+        ultimoID = id;
+
+        document.getElementById("idTrabajador").value = id;
+
+        db.ref("trabajadores/" + id).once("value")
+        .then(snapshot => {
+
+            let t = snapshot.val();
+
+            if(t){
+                document.getElementById("nombre").value = t.nombre || "";
+
+                let apellidos = (t.apellido_paterno || "") + " " + (t.apellido_materno || "");
+                document.getElementById("apellidos").value = apellidos.trim();
+
+                document.getElementById("sexo").value = t.sexo || "";
+
+                setTimeout(()=>registrar("OCUPADO"),300);
+            }
+        });
     });
 }
 
-// BORRAR
-function borrar(id){
-    let data = obtener();
-    delete data[id];
-    guardar(data);
-    render();
+// 🔊 SONIDOS
+function beepOK(){
+    let ctx = new (window.AudioContext || window.webkitAudioContext)();
+    let osc = ctx.createOscillator();
+    osc.frequency.value = 800;
+    osc.connect(ctx.destination);
+    osc.start();
+    setTimeout(()=>osc.stop(),150);
 }
 
-// RESET
-function reset(){
-    if(confirm("Reiniciar todo?")){
-        localStorage.removeItem("terraflux");
-        render();
-    }
-}
-
-// CAMA VACÍA
-function camaVacia(){
-    let trailaActual = document.getElementById("trailaInicial").value;
-    let camaActual = document.getElementById("capacidad").value;
-
-    let id = "VACIA_" + Date.now();
-
-    let data = obtener();
-
-    data[id] = {
-        id,
-        nombre:"N/A",
-        trailaActual,
-        camaActual: camaActual + " - VACÍA",
-        hora:new Date().toLocaleTimeString()
-    };
-
-    guardar(data);
-    render();
-}
-
-// SONIDO
-function feedback(tipo){
-    document.body.className = tipo;
-    document.getElementById("beep").play();
-    setTimeout(()=>document.body.className="",300);
+function beepError(){
+    let ctx = new (window.AudioContext || window.webkitAudioContext)();
+    let osc = ctx.createOscillator();
+    osc.frequency.value = 200;
+    osc.connect(ctx.destination);
+    osc.start();
+    setTimeout(()=>osc.stop(),300);
 }
 
 // INICIO
-render();
-
-let scanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
-scanner.render(onScanSuccess);
-
-
-document.getElementById("excelFile").addEventListener("change", function(e){
-
-    let file = e.target.files[0];
-    let reader = new FileReader();
-
-    reader.onload = function(e){
-        let data = new Uint8Array(e.target.result);
-        let workbook = XLSX.read(data, {type: "array"});
-
-        let hoja = workbook.Sheets[workbook.SheetNames[0]];
-        let json = XLSX.utils.sheet_to_json(hoja);
-
-        baseDatos = {}; // 🔥 reset
-
-        json.forEach(row => {
-            // 👇 ajusta según tu Excel
-            let id = String(row.ID || row.id || row.Id).trim();
-            let nombre = row.NOMBRE || row.Nombre || row.nombre;
-
-            if(id){
-                baseDatos[id] = nombre;
-            }
-        });
-
-        alert("Excel cargado correctamente ✅");
-        console.log(baseDatos);
-    };
-
-    reader.readAsArrayBuffer(file);
+window.addEventListener("load",()=>{
+    iniciarEscaneo();
+    document.getElementById("idTrabajador").focus();
 });
-    function descargarExcel(){
+function borrarTodo(){
 
-    let data = obtener(); // LocalStorage
-
-    let lista = Object.values(data);
-
-    if(lista.length === 0){
-        alert("No hay datos para descargar");
-        return;
+    if(confirm("⚠️ Esto borrará todo el censo. ¿Continuar?")){
+        lista = [];
+        render();
     }
+}
+function eliminar(i){
 
-    // convertir a formato Excel
-    let ws = XLSX.utils.json_to_sheet(lista);
-    let wb = XLSX.utils.book_new();
+    if(confirm("¿Eliminar cama " + lista[i].cama + "?")){
+        lista.splice(i,1);
+        render();
+    }
+}
+function eliminar(i){
 
-    XLSX.utils.book_append_sheet(wb, ws, "Registros");
-
-    // descargar archivo
-    XLSX.writeFile(wb, "terraflux_registros.xlsx");
+    if(confirm("¿Eliminar este registro?")){
+        lista.splice(i,1);
+        render();
+    }
 }
 </script>
+
 </body>
 </html>
