@@ -4,73 +4,32 @@
 <meta charset="UTF-8">
 <title>Censo de Camas</title>
 
-<!-- QR -->
 <script src="https://unpkg.com/html5-qrcode"></script>
 
-<!-- 🔥 FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <style>
-body{
-    font-family: Arial;
-    background:#f4f6f9;
-    padding:20px;
-}
-.container{
-    max-width:900px;
-    margin:auto;
-}
-h2{
-    text-align:center;
-}
-.form{
-    display:flex;
-    flex-wrap:wrap;
-    gap:10px;
-    justify-content:center;
-    margin-bottom:20px;
-}
-input{
-    padding:10px;
-    border-radius:8px;
-    border:1px solid #ccc;
-}
-button{
-    padding:10px 15px;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-    color:white;
-}
-.btn-normal{ background:#007bff; }
-.btn-vacio{ background:#6c757d; }
-.btn-fuera{ background:#dc3545; }
+body{font-family:Arial;background:#f4f6f9;padding:20px;}
+.container{max-width:900px;margin:auto;}
+h2{text-align:center;}
+.form{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:20px;}
+input{padding:10px;border-radius:8px;border:1px solid #ccc;}
+button{padding:10px 15px;border:none;border-radius:8px;cursor:pointer;color:white;}
+.btn-normal{background:#007bff;}
+.btn-vacio{background:#6c757d;}
+.btn-fuera{background:#dc3545;}
 
-table{
-    width:100%;
-    background:white;
-    border-collapse:collapse;
-    border-radius:10px;
-    overflow:hidden;
-}
-th{
-    background:#343a40;
-    color:white;
-    padding:10px;
-}
-td{
-    padding:8px;
-    border-bottom:1px solid #ddd;
-    text-align:center;
-}
+table{width:100%;background:white;border-collapse:collapse;border-radius:10px;overflow:hidden;}
+th{background:#343a40;color:white;padding:10px;}
+td{padding:8px;border-bottom:1px solid #ddd;text-align:center;}
 
-.vacio{ color:#6c757d; font-weight:bold; }
-.fuera{ color:#dc3545; font-weight:bold; }
-.ocupado{ color:#28a745; font-weight:bold; }
+.vacio{color:#6c757d;font-weight:bold;}
+.fuera{color:#dc3545;font-weight:bold;}
+.ocupado{color:#28a745;font-weight:bold;}
 
-.ok{ background:#d4edda !important; }
-.error{ background:#f8d7da !important; }
+.ok{background:#d4edda !important;}
+.error{background:#f8d7da !important;}
 </style>
 </head>
 
@@ -82,7 +41,6 @@ td{
 
 <div id="reader" style="width:300px; margin:auto;"></div>
 
-<!-- DASHBOARD -->
 <div style="display:flex; gap:15px; justify-content:center; margin:20px 0;">
     <div>🟢 Ocupadas: <b id="ocupadas">0</b></div>
     <div>⚪ Vacías: <b id="vacias">0</b></div>
@@ -104,9 +62,7 @@ td{
 <button class="btn-normal" onclick="registrar('OCUPADO')">Registrar</button>
 <button class="btn-vacio" onclick="registrar('VACIA')">Vacía</button>
 <button class="btn-fuera" onclick="registrar('FUERA')">Fuera</button>
-<button onclick="borrarTodo()" style="background:#000; margin-bottom:10px;">
-    🧨 Reiniciar Censo
-</button>
+<button onclick="borrarTodo()" style="background:#000;">🧨 Reiniciar Censo</button>
 </div>
 
 <table>
@@ -130,16 +86,11 @@ td{
 
 <script>
 
-// 🔥 FIREBASE
 var firebaseConfig = {
- apiKey: "AIzaSyDz4RqKjSJxB0F5eP4RzajQtW94cPXmpSg",
-    authDomain: "data-b6691.firebaseapp.com",
-    databaseURL: "https://data-b6691-default-rtdb.firebaseio.com",
-    projectId: "data-b6691",
-    storageBucket: "data-b6691.firebasestorage.app",
-    messagingSenderId: "932857865624",
-    appId: "1:932857865624:web:20408d56e0a821aae737ed",
-    measurementId: "G-G16TH0Y127"
+  apiKey: "AIzaSy...",
+  authDomain: "terraflux-database.firebaseapp.com",
+  databaseURL: "https://terraflux-database-default-rtdb.firebaseio.com",
+  projectId: "terraflux-database"
 };
 firebase.initializeApp(firebaseConfig);
 var db = firebase.database();
@@ -147,7 +98,6 @@ var db = firebase.database();
 let lista = [];
 let qr, ultimoID = "";
 
-// 🔥 REGISTRAR
 function registrar(estado){
 
     let traila = document.getElementById("traila").value;
@@ -180,19 +130,7 @@ function registrar(estado){
     }
 
     lista.push({id,nombre,apellidos,traila,cama,sexo,estado,observacion:obs});
-let key = traila + "_" + cama;
 
-db.ref("censo_cajon/" + key).set({
-    id,
-    nombre,
-    apellidos,
-    traila,
-    cama,
-    sexo,
-    estado,
-    observacion: obs,
-    timestamp: Date.now()
-});
     document.body.classList.add("ok");
     setTimeout(()=>document.body.classList.remove("ok"), 300);
     beepOK();
@@ -204,7 +142,6 @@ db.ref("censo_cajon/" + key).set({
     document.getElementById("idTrabajador").focus();
 }
 
-// LIMPIAR
 function limpiarCampos(){
     document.getElementById("idTrabajador").value = "";
     document.getElementById("nombre").value = "";
@@ -213,12 +150,11 @@ function limpiarCampos(){
     document.getElementById("observacion").value = "";
 }
 
-// RENDER
 function render(){
 
     let html = "";
 
-    lista.forEach(p => {
+    lista.forEach((p, i) => {
 
         let clase = p.estado === "VACIA" ? "vacio" :
                     p.estado === "FUERA" ? "fuera" : "ocupado";
@@ -233,7 +169,9 @@ function render(){
             <td>${p.sexo}</td>
             <td class="${clase}">${p.estado}</td>
             <td>${p.observacion || "-"}</td>
-          <td><button onclick="eliminar(${i})" style="background:#dc3545;">🗑</button></td>
+            <td>
+                <button onclick="eliminar(${i})" style="background:#dc3545;">Eliminar</button>
+            </td>
         </tr>`;
     });
 
@@ -241,7 +179,6 @@ function render(){
     actualizarContadores();
 }
 
-// CONTADORES
 function actualizarContadores(){
     let ocupadas=0,vacias=0,fuera=0;
 
@@ -257,12 +194,10 @@ function actualizarContadores(){
     document.getElementById("total").innerText=lista.length;
 }
 
-// RESET CAMA
 document.getElementById("traila").addEventListener("change",()=>{
     document.getElementById("cama").value = 1;
 });
 
-// 🔥 ESCÁNER AUTO
 function iniciarEscaneo(){
 
     qr = new Html5Qrcode("reader");
@@ -295,7 +230,6 @@ function iniciarEscaneo(){
     });
 }
 
-// 🔊 SONIDOS
 function beepOK(){
     let ctx = new (window.AudioContext || window.webkitAudioContext)();
     let osc = ctx.createOscillator();
@@ -314,32 +248,25 @@ function beepError(){
     setTimeout(()=>osc.stop(),300);
 }
 
-// INICIO
-window.addEventListener("load",()=>{
-    iniciarEscaneo();
-    document.getElementById("idTrabajador").focus();
-});
 function borrarTodo(){
-
     if(confirm("⚠️ Esto borrará todo el censo. ¿Continuar?")){
         lista = [];
         render();
     }
 }
-function eliminar(i){
 
-    if(confirm("¿Eliminar cama " + lista[i].cama + "?")){
-        lista.splice(i,1);
-        render();
-    }
-}
 function eliminar(i){
-
     if(confirm("¿Eliminar este registro?")){
         lista.splice(i,1);
         render();
     }
 }
+
+window.addEventListener("load",()=>{
+    iniciarEscaneo();
+    document.getElementById("idTrabajador").focus();
+});
+
 </script>
 
 </body>
