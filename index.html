@@ -1,14 +1,16 @@
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <title>Censo de Camas</title>
 
-<!-- QR -->
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <!-- 🔥 FIREBASE -->
+
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <style>
@@ -21,9 +23,7 @@ body{
     max-width:900px;
     margin:auto;
 }
-h2{
-    text-align:center;
-}
+h2{text-align:center;}
 .form{
     display:flex;
     flex-wrap:wrap;
@@ -72,6 +72,7 @@ td{
 .ok{ background:#d4edda !important; }
 .error{ background:#f8d7da !important; }
 </style>
+
 </head>
 
 <body>
@@ -82,7 +83,6 @@ td{
 
 <div id="reader" style="width:300px; margin:auto;"></div>
 
-<!-- DASHBOARD -->
 <div style="display:flex; gap:15px; justify-content:center; margin:20px 0;">
     <div>🟢 Ocupadas: <b id="ocupadas">0</b></div>
     <div>⚪ Vacías: <b id="vacias">0</b></div>
@@ -101,12 +101,9 @@ td{
 
 <input type="text" id="observacion" placeholder="Observaciones">
 
-<button class="btn-normal" onclick="registrar('OCUPADO')">Registrar</button>
-<button class="btn-vacio" onclick="registrar('VACIA')">Vacía</button>
-<button class="btn-fuera" onclick="registrar('FUERA')">Fuera</button>
-<button onclick="borrarTodo()" style="background:#000; margin-bottom:10px;">
-    🧨 Reiniciar Censo
-</button>
+<button class="btn-normal" onclick="registrar('OCUPADO')">Registrar</button> <button class="btn-vacio" onclick="registrar('VACIA')">Vacía</button> <button class="btn-fuera" onclick="registrar('FUERA')">Fuera</button> <button onclick="borrarTodo()" style="background:#000;">
+🧨 Reiniciar Censo </button>
+
 </div>
 
 <table>
@@ -133,13 +130,12 @@ td{
 // 🔥 FIREBASE
 var firebaseConfig = {
  apiKey: "AIzaSyDz4RqKjSJxB0F5eP4RzajQtW94cPXmpSg",
-    authDomain: "data-b6691.firebaseapp.com",
-    databaseURL: "https://data-b6691-default-rtdb.firebaseio.com",
-    projectId: "data-b6691",
-    storageBucket: "data-b6691.firebasestorage.app",
-    messagingSenderId: "932857865624",
-    appId: "1:932857865624:web:20408d56e0a821aae737ed",
-    measurementId: "G-G16TH0Y127"
+ authDomain: "data-b6691.firebaseapp.com",
+ databaseURL: "https://data-b6691-default-rtdb.firebaseio.com",
+ projectId: "data-b6691",
+ storageBucket: "data-b6691.firebasestorage.app",
+ messagingSenderId: "932857865624",
+ appId: "1:932857865624:web:20408d56e0a821aae737ed"
 };
 firebase.initializeApp(firebaseConfig);
 var db = firebase.database();
@@ -164,42 +160,27 @@ function registrar(estado){
         return;
     }
 
-    let existe = lista.some(p => p.traila == traila && p.cama == cama);
-    if(existe){
-        alert("Cama duplicada");
-        return;
-    }
-
     let existente = lista.find(p => p.id == id && p.estado === "OCUPADO");
     if(existente){
         document.body.classList.add("error");
         setTimeout(()=>document.body.classList.remove("error"), 300);
         beepError();
-        document.getElementById("idTrabajador").value = "";
         return;
     }
 
-    lista.push({id,nombre,apellidos,traila,cama,sexo,estado,observacion:obs});
-let key = traila + "_" + cama;
+    let key = traila + "_" + cama;
 
-db.ref("censo_cajon/" + key).set({
-    id,
-    nombre,
-    apellidos,
-    traila,
-    cama,
-    sexo,
-    estado,
-    observacion: obs,
-    timestamp: Date.now()
-});
+    db.ref("censo_cajon/" + key).set({
+        id,nombre,apellidos,traila,cama,sexo,estado,
+        observacion: obs,
+        timestamp: Date.now()
+    });
+
     document.body.classList.add("ok");
     setTimeout(()=>document.body.classList.remove("ok"), 300);
     beepOK();
 
     limpiarCampos();
-    render();
-
     document.getElementById("cama").value = cama + 1;
     document.getElementById("idTrabajador").focus();
 }
@@ -213,12 +194,12 @@ function limpiarCampos(){
     document.getElementById("observacion").value = "";
 }
 
-// RENDER
+// 🔥 RENDER
 function render(){
 
     let html = "";
 
-    lista.forEach(p => {
+    lista.forEach((p,i) => {
 
         let clase = p.estado === "VACIA" ? "vacio" :
                     p.estado === "FUERA" ? "fuera" : "ocupado";
@@ -233,7 +214,7 @@ function render(){
             <td>${p.sexo}</td>
             <td class="${clase}">${p.estado}</td>
             <td>${p.observacion || "-"}</td>
-          <td><button onclick="eliminar(${i})" style="background:#dc3545;">🗑</button></td>
+            <td><button onclick="eliminar(${i})" style="background:#dc3545;">🗑</button></td>
         </tr>`;
     });
 
@@ -257,42 +238,71 @@ function actualizarContadores(){
     document.getElementById("total").innerText=lista.length;
 }
 
-// RESET CAMA
-document.getElementById("traila").addEventListener("change",()=>{
-    document.getElementById("cama").value = 1;
-});
+// 🔥 FIREBASE → UI
+db.ref("censo_cajon").on("value", snapshot => {
 
-// 🔥 ESCÁNER AUTO
-function iniciarEscaneo(){
+    lista = [];
 
-    qr = new Html5Qrcode("reader");
+    snapshot.forEach(child => {
+        let d = child.val();
 
-    qr.start({ facingMode: "environment" }, { fps:10, qrbox:250 },
-    (decodedText)=>{
-
-        let id = decodedText.trim();
-        if(id === ultimoID) return;
-        ultimoID = id;
-
-        document.getElementById("idTrabajador").value = id;
-
-        db.ref("trabajadores/" + id).once("value")
-        .then(snapshot => {
-
-            let t = snapshot.val();
-
-            if(t){
-                document.getElementById("nombre").value = t.nombre || "";
-
-                let apellidos = (t.apellido_paterno || "") + " " + (t.apellido_materno || "");
-                document.getElementById("apellidos").value = apellidos.trim();
-
-                document.getElementById("sexo").value = t.sexo || "";
-
-                setTimeout(()=>registrar("OCUPADO"),300);
-            }
+        lista.push({
+            id:d.id,nombre:d.nombre,apellidos:d.apellidos,
+            traila:d.traila,cama:d.cama,sexo:d.sexo,
+            estado:d.estado,observacion:d.observacion
         });
     });
+
+    render();
+});
+
+// 🔍 AUTOCOMPLETAR
+document.getElementById("idTrabajador").addEventListener("input", function () {
+
+    let id = this.value.trim();
+    if(id.length < 3) return;
+
+    db.ref("trabajadores/" + id).once("value")
+    .then(snapshot => {
+
+        let t = snapshot.val();
+
+        if(t){
+            document.getElementById("nombre").value = t.nombre || "";
+            document.getElementById("apellidos").value =
+                (t.apellido_paterno || "") + " " + (t.apellido_materno || "");
+            document.getElementById("sexo").value = t.sexo || "";
+
+            document.body.classList.add("ok");
+            beepOK();
+        } else {
+            limpiarCampos();
+            document.body.classList.add("error");
+            beepError();
+        }
+
+        setTimeout(()=>{
+            document.body.classList.remove("ok");
+            document.body.classList.remove("error");
+        },300);
+    });
+});
+
+// 🔥 ELIMINAR
+function eliminar(i){
+    let p = lista[i];
+    let key = p.traila + "_" + p.cama;
+
+    if(confirm("¿Eliminar este registro?")){
+        db.ref("censo_cajon/" + key).remove();
+    }
+}
+
+// 🔥 BORRAR TODO
+function borrarTodo(){
+    if(confirm("⚠️ Esto borrará todo el censo. ¿Continuar?")){
+        db.ref("censo_cajon").remove();
+    }
 }
 
 // 🔊 SONIDOS
@@ -314,32 +324,20 @@ function beepError(){
     setTimeout(()=>osc.stop(),300);
 }
 
+// QR
+function iniciarEscaneo(){
+    qr = new Html5Qrcode("reader");
+    qr.start({ facingMode: "environment" }, { fps:10, qrbox:250 },
+    (decodedText)=>{
+        document.getElementById("idTrabajador").value = decodedText.trim();
+    });
+}
+
 // INICIO
 window.addEventListener("load",()=>{
     iniciarEscaneo();
     document.getElementById("idTrabajador").focus();
 });
-function borrarTodo(){
-
-    if(confirm("⚠️ Esto borrará todo el censo. ¿Continuar?")){
-        lista = [];
-        render();
-    }
-}
-function eliminar(i){
-
-    if(confirm("¿Eliminar cama " + lista[i].cama + "?")){
-        lista.splice(i,1);
-        render();
-    }
-}
-function eliminar(i){
-
-    if(confirm("¿Eliminar este registro?")){
-        lista.splice(i,1);
-        render();
-    }
-}
 </script>
 
 </body>
