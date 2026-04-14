@@ -143,7 +143,7 @@ var db = firebase.database();
 let lista = [];
 let qr, ultimoID = "";
 
-// 🔥 REGISTRAR
+// 🔥 REGISTRAR (TU ORIGINAL)
 function registrar(estado){
 
     let traila = document.getElementById("traila").value;
@@ -185,6 +185,45 @@ function registrar(estado){
     document.getElementById("idTrabajador").focus();
 }
 
+// 🔥 VALIDACIÓN EXTRA (AGREGADA SIN ROMPER)
+const registrarOriginal = registrar;
+
+registrar = async function(estado){
+
+    let traila = document.getElementById("traila").value;
+    let cama = parseInt(document.getElementById("cama").value);
+    let id = document.getElementById("idTrabajador").value;
+
+    let key = traila + "_" + cama;
+
+    let camaSnap = await db.ref("censo_cajon/" + key).once("value");
+
+    if(camaSnap.exists()){
+        alert("❌ Esta cama ya está ocupada");
+        beepError();
+        return;
+    }
+
+    let snapshot = await db.ref("censo_cajon").once("value");
+
+    let duplicado = false;
+
+    snapshot.forEach(child => {
+        let d = child.val();
+        if(d.id == id && d.estado === "OCUPADO"){
+            duplicado = true;
+        }
+    });
+
+    if(duplicado){
+        alert("❌ Este trabajador ya tiene una cama asignada");
+        beepError();
+        return;
+    }
+
+    registrarOriginal(estado);
+};
+
 // LIMPIAR
 function limpiarCampos(){
     document.getElementById("idTrabajador").value = "";
@@ -196,11 +235,8 @@ function limpiarCampos(){
 
 // 🔥 RENDER
 function render(){
-
     let html = "";
-
     lista.forEach((p,i) => {
-
         let clase = p.estado === "VACIA" ? "vacio" :
                     p.estado === "FUERA" ? "fuera" : "ocupado";
 
@@ -260,7 +296,9 @@ db.ref("censo_cajon").on("value", snapshot => {
 document.getElementById("idTrabajador").addEventListener("input", function () {
 
     let id = this.value.trim();
-    if(id.length < 3) return;
+
+    // ⛔ NO HACER NADA SI AÚN ESTÁ ESCRIBIENDO
+    if(id.length < 8) return;
 
     db.ref("trabajadores/" + id).once("value")
     .then(snapshot => {
@@ -269,14 +307,16 @@ document.getElementById("idTrabajador").addEventListener("input", function () {
 
         if(t){
             document.getElementById("nombre").value = t.nombre || "";
+
             document.getElementById("apellidos").value =
                 (t.apellido_paterno || "") + " " + (t.apellido_materno || "");
+
             document.getElementById("sexo").value = t.sexo || "";
 
             document.body.classList.add("ok");
             beepOK();
         } else {
-            limpiarCampos();
+            // ❌ SOLO MARCAR ERROR SI YA COMPLETÓ EL ID
             document.body.classList.add("error");
             beepError();
         }
@@ -324,7 +364,7 @@ function beepError(){
     setTimeout(()=>osc.stop(),300);
 }
 
-// 🔥 QR (ARREGLADO)
+// 🔥 QR
 function iniciarEscaneo(){
 
     qr = new Html5Qrcode("reader");
@@ -339,8 +379,12 @@ function iniciarEscaneo(){
         let input = document.getElementById("idTrabajador");
         input.value = id;
 
-        // 🔥 DISPARAR AUTOCOMPLETADO
         input.dispatchEvent(new Event('input'));
+
+        // 🔥 AUTO GUARDAR
+        setTimeout(()=>{
+            registrar("OCUPADO");
+        },300);
     });
 }
 
@@ -348,6 +392,19 @@ function iniciarEscaneo(){
 window.addEventListener("load",()=>{
     iniciarEscaneo();
     document.getElementById("idTrabajador").focus();
+});
+
+// 🔄 DETECTAR CAMBIO DE TRAILA
+let ultimaTraila = "";
+
+document.getElementById("traila").addEventListener("input", function(){
+
+    let actual = this.value;
+
+    if(actual !== ultimaTraila){
+        document.getElementById("cama").value = 1;
+        ultimaTraila = actual;
+    }
 });
 </script>
 
