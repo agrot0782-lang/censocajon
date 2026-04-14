@@ -324,12 +324,23 @@ function beepError(){
     setTimeout(()=>osc.stop(),300);
 }
 
-// QR
+// 🔥 QR (ARREGLADO)
 function iniciarEscaneo(){
+
     qr = new Html5Qrcode("reader");
+
     qr.start({ facingMode: "environment" }, { fps:10, qrbox:250 },
     (decodedText)=>{
-        document.getElementById("idTrabajador").value = decodedText.trim();
+
+        let id = decodedText.trim();
+        if(id === ultimoID) return;
+        ultimoID = id;
+
+        let input = document.getElementById("idTrabajador");
+        input.value = id;
+
+        // 🔥 DISPARAR AUTOCOMPLETADO
+        input.dispatchEvent(new Event('input'));
     });
 }
 
