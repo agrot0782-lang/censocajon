@@ -329,7 +329,20 @@ async function descargarTrabajadores(){
             return;
         }
 
-        localStorage.setItem("trabajadores", JSON.stringify(data));
+        let limpio = {};
+
+        // 🔥 TRANSFORMAR FORMATO
+        Object.values(data).forEach(t => {
+
+            if(t.id){
+                limpio[t.id] = t;
+            }
+
+        });
+
+        localStorage.setItem("trabajadores", JSON.stringify(limpio));
+
+        console.log("🔥 Trabajadores convertidos:", limpio);
 
         alert("✅ Trabajadores listos para uso offline");
 
