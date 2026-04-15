@@ -285,26 +285,57 @@ function iniciarEscaneo(){
 
         ultimoID = id;
 
-        document.getElementById("idTrabajador").value = id;
+       let input = document.getElementById("idTrabajador");
+
+input.value = id;
+
+// 🔥 DISPARA EL AUTOCOMPLETADO
+input.dispatchEvent(new Event('input'));
     });
 }
 
 // INICIO
 window.addEventListener("load",()=>{
-    render();
-    iniciarEscaneo();
-});
 
-// TRAILA RESET
-let ultimaTraila = "";
+    document.getElementById("idTrabajador").addEventListener("input", function () {
 
-document.getElementById("traila").addEventListener("input", function(){
-    let actual = this.value;
+        let id = this.value.trim();
 
-    if(actual !== ultimaTraila){
-        document.getElementById("cama").value = 1;
-        ultimaTraila = actual;
-    }
+        if(id.length < 4) return; // 🔥 bajamos para probar
+
+        let trabajadores = JSON.parse(localStorage.getItem("trabajadores") || "{}");
+
+        console.log("Buscando:", id);
+        console.log("DB:", trabajadores);
+
+        let t = trabajadores[id];
+
+        if(t){
+
+            document.getElementById("nombre").value = t.nombre || "";
+
+            document.getElementById("apellidos").value =
+                (t.apellido_paterno || "") + " " + (t.apellido_materno || "");
+
+            document.getElementById("sexo").value = t.sexo || "";
+
+            document.body.classList.add("ok");
+            beepOK();
+
+        } else {
+
+            console.warn("NO encontrado:", id);
+
+            document.body.classList.add("error");
+            beepError();
+        }
+
+        setTimeout(()=>{
+            document.body.classList.remove("ok");
+            document.body.classList.remove("error");
+        },300);
+    });
+
 });
 // 🔥 FIREBASE (solo para descargar)
 var firebaseConfig = {
@@ -352,6 +383,7 @@ async function descargarTrabajadores(){
     }
 }
 
+
 // ==========================
 // 🔥 AUTOCOMPLETAR OFFLINE
 // ==========================
@@ -363,7 +395,7 @@ document.getElementById("idTrabajador").addEventListener("input", function () {
 
     let trabajadores = JSON.parse(localStorage.getItem("trabajadores") || "{}");
 
-    let t = trabajadores[id];
+    let t = trabajadores[id] || trabajadores[parseInt(id)];
 
     if(t){
 
