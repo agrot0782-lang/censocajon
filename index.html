@@ -89,6 +89,8 @@ td{
     <div>⚪ Vacías: <b id="vacias">0</b></div>
     <div>🔴 Fuera: <b id="fuera">0</b></div>
     <div>📊 Total: <b id="total">0</b></div>
+    <div>👨 Hombres: <b id="hombres">0</b></div>
+<div>👩 Mujeres: <b id="mujeres">0</b></div>
 </div>
 
 <div class="form">
@@ -262,18 +264,34 @@ function render(){
 
 // CONTADORES
 function actualizarContadores(){
+
     let ocupadas=0,vacias=0,fuera=0;
+    let hombres=0,mujeres=0;
 
     lista.forEach(p =>{
+
+        // estados
         if(p.estado==="OCUPADO") ocupadas++;
         else if(p.estado==="VACIA") vacias++;
         else if(p.estado==="FUERA") fuera++;
+
+        // sexo
+        if(p.sexo){
+            let s = p.sexo.toUpperCase();
+
+            if(s === "MASCULINO") hombres++;
+            else if(s === "FEMENINO") mujeres++;
+        }
+
     });
 
     document.getElementById("ocupadas").innerText=ocupadas;
     document.getElementById("vacias").innerText=vacias;
     document.getElementById("fuera").innerText=fuera;
     document.getElementById("total").innerText=lista.length;
+
+    document.getElementById("hombres").innerText=hombres;
+    document.getElementById("mujeres").innerText=mujeres;
 }
 
 // 🔥 FIREBASE → UI
