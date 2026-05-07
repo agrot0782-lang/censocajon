@@ -3,7 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <title>Censo Trailas Cajon</title>
-
+<div style="margin:15px 0;">
+    <input 
+        type="text" 
+        id="search"
+        placeholder="🔍 Buscar por QR, nombre o traila..."
+        onkeyup="filtrarTabla()"
+        style="
+            width:100%;
+            padding:12px;
+            border-radius:10px;
+            border:1px solid #ccc;
+            font-size:16px;
+        "
+    >
+</div>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -65,13 +79,16 @@ body{
 /* TABLA */
 table{
     width:100%;
-    table-layout:fixed;
+    table-layout:auto;
     border-collapse:collapse;
     background:white;
     border-radius:12px;
     overflow:hidden;
+    font-size:12px;
 }
-
+td, th{
+    padding:6px;
+}
 th{
     background:#343a40;
     color:white;
@@ -132,6 +149,18 @@ tbody tr:nth-child(even){
     border:none;
     cursor:pointer;
 }
+td button{
+    border:none;
+    padding:6px 10px;
+    border-radius:8px;
+    cursor:pointer;
+    margin-right:4px;
+    font-size:14px;
+}
+
+td button:hover{
+    opacity:0.8;
+}
 </style>
 </head>
 
@@ -159,11 +188,16 @@ tbody tr:nth-child(even){
 <th>ID</th>
 <th>Nombre</th>
 <th>Apellidos</th>
-<th>Traila</th>
-<th>Cama</th>
+<th onclick="ordenarPor('traila')" style="cursor:pointer">
+    Traila 🔃
+</th>
+<th onclick="ordenarPor('cama')" style="cursor:pointer">
+    Cama 🔃
+</th>
 <th>Sexo</th>
 <th>Zona</th>
 <th>Estado</th>
+<th>Acciones</th>
 </tr>
 </thead>
 <tbody id="tabla"></tbody>
@@ -201,6 +235,11 @@ firebase.initializeApp(firebaseConfig);
 var db = firebase.database();
 
 let lista = [];
+let listaFiltrada = [];
+let ordenActual = {
+    campo:"",
+    asc:true
+};
 let trabajadores = {};
 
 let dataCenso = false;
@@ -232,8 +271,10 @@ db.ref("censo_cajon").on("value", snapshot => {
         });
     });
 
+    listaFiltrada = [...lista];
     dataCenso = true;
     intentarRender();
+
 });
 
 // 🔥 CONTROL
@@ -246,7 +287,7 @@ function intentarRender(){
 // 🔥 RENDER
 function render(){
 
-    if(lista.length === 0){
+    if(listaFiltrada.length === 0){
         document.getElementById("tabla").innerHTML =
         "<tr><td colspan='8'>Sin datos</td></tr>";
         return;
@@ -256,7 +297,7 @@ function render(){
     let ocupadas=0,vacias=0,fuera=0,hombres=0,mujeres=0;
     let zonas={};
 
-    lista.forEach(p=>{
+   listaFiltrada.forEach(p=>{
 
         let clase = p.estado==="OCUPADO"?"ocupado":
                     p.estado==="FUERA"?"fuera":"vacio";
@@ -281,6 +322,19 @@ function render(){
         <td>${p.sexo}</td>
         <td>${zona}</td>
         <td class="${clase}">${p.estado}</td>
+        <td>
+    <button onclick="editarTrabajador('${p.id}')">
+        ✏️
+    </button>
+
+    <button onclick="vaciarCama('${p.id}')">
+        🛏️
+    </button>
+
+    <button onclick="eliminarTrabajador('${p.id}')">
+        🗑️
+    </button>
+</td>
         </tr>`;
     });
 
@@ -338,6 +392,151 @@ function exportarExcel(){
     let wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Censo");
     XLSX.writeFile(wb, "censo.xlsx");
+}
+function filtrarTabla(){
+
+    let texto = document
+        .getElementById("search")
+        .value
+        .toLowerCase();
+
+    listaFiltrada = lista.filter(p => {
+
+        return (
+            (p.id || "").toLowerCase().includes(texto) ||
+            (p.nombre || "").toLowerCase().includes(texto) ||
+            (p.apellidos || "").toLowerCase().includes(texto) ||
+            (p.traila || "").toLowerCase().includes(texto)
+        );
+
+    });
+
+    render();
+}
+function ordenarPor(campo){
+
+    // cambiar dirección
+    if(ordenActual.campo === campo){
+        ordenActual.asc = !ordenActual.asc;
+    }else{
+        ordenActual.campo = campo;
+        ordenActual.asc = true;
+    }
+
+    listaFiltrada.sort((a,b)=>{
+
+        let valA = parseInt(a[campo]) || 0;
+        let valB = parseInt(b[campo]) || 0;
+
+        if(ordenActual.asc){
+            return valA - valB;
+        }else{
+            return valB - valA;
+        }
+
+    });
+
+    render();
+}
+// ✏️ EDITAR
+function editarTrabajador(id){
+
+    let trabajador = lista.find(p => p.id == id);
+
+    if(!trabajador){
+        alert("Trabajador no encontrado");
+        return;
+    }
+
+    let nuevoID = prompt("ID:", trabajador.id);
+    if(nuevoID === null) return;
+
+    let nuevoNombre = prompt("Nombre:", trabajador.nombre);
+    if(nuevoNombre === null) return;
+
+    let nuevosApellidos = prompt("Apellidos:", trabajador.apellidos);
+    if(nuevosApellidos === null) return;
+
+    let nuevaTraila = prompt("Traila:", trabajador.traila);
+    if(nuevaTraila === null) return;
+
+    let nuevaCama = prompt("Cama:", trabajador.cama);
+    if(nuevaCama === null) return;
+
+    let nuevoSexo = prompt("Sexo:", trabajador.sexo);
+    if(nuevoSexo === null) return;
+
+    let nuevoEstado = prompt("Estado:", trabajador.estado);
+    if(nuevoEstado === null) return;
+
+    db.ref("censo_cajon")
+    .orderByChild("id")
+    .equalTo(id)
+    .once("value", snapshot => {
+
+        snapshot.forEach(child => {
+
+            child.ref.update({
+                id: nuevoID.toUpperCase(),
+                nombre: nuevoNombre.toUpperCase(),
+                apellidos: nuevosApellidos.toUpperCase(),
+                traila: nuevaTraila,
+                cama: nuevaCama,
+                sexo: nuevoSexo.toUpperCase(),
+                estado: nuevoEstado.toUpperCase()
+            });
+
+        });
+
+    });
+
+}
+
+// 🛏️ VACIAR CAMA
+function vaciarCama(id){
+
+    if(confirm("¿Marcar cama como VACIA?")){
+
+        db.ref("censo_cajon")
+        .orderByChild("id")
+        .equalTo(id)
+        .once("value", snapshot=>{
+
+            snapshot.forEach(child=>{
+
+                child.ref.update({
+                    id:"",
+                    nombre:"",
+                    apellidos:"",
+                    sexo:"",
+                    estado:"VACIA"
+                });
+
+            });
+
+        });
+
+    }
+}
+
+// 🗑️ ELIMINAR
+function eliminarTrabajador(id){
+
+    if(confirm("¿Eliminar trabajador?")){
+
+        db.ref("censo_cajon")
+        .orderByChild("id")
+        .equalTo(id)
+        .once("value", snapshot=>{
+
+            snapshot.forEach(child=>{
+
+                child.ref.remove();
+            });
+
+        });
+
+    }
 }
 </script>
 
