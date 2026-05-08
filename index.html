@@ -7,15 +7,27 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 <style>
 
 body{
     font-family: Arial;
-    background:#f4f6f9;
-    padding:20px;
+    background:#eceef3;
+    margin: 0;
 }
 
+th:first-child{
+
+    border-top-left-radius:16px;
+
+}
+
+th:last-child{
+
+    border-top-right-radius:16px;
+
+}
 /* ZONAS */
 .zonas-box{
     background:white;
@@ -51,17 +63,18 @@ body{
 /* LAYOUT */
 .main-layout{
     display:flex;
+    flex-direction:column;
     gap:20px;
 }
 
 .left-panel{
-    flex:2;
+    width:100%;
 }
 
 .right-panel{
-    flex:1;
-    display:flex;
-    flex-direction:column;
+     width:100%;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
     gap:15px;
 }
 
@@ -78,13 +91,14 @@ table{
 
 th,
 td{
-    padding:8px;
+    padding:12px 14px;
 }
 
 th{
     background:#343a40;
     color:white;
     text-align:left;
+     font-size:20px;
 }
 
 td{
@@ -92,48 +106,13 @@ td{
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
+    font-size:20px;
 }
 
 tbody tr:nth-child(even){
     background:#f8f9fa;
 }
 
-/* CARDS */
-.card{
-    padding:15px;
-    border-radius:12px;
-    color:white;
-    text-align:center;
-}
-
-.blue{background:#007bff;}
-.green{background:#28a745;}
-.gray{background:#6c757d;}
-.red{background:#dc3545;}
-.purple{background:#6f42c1;}
-.pink{background:#e83e8c;}
-
-.ocupado{
-    color:#28a745;
-    font-weight:bold;
-}
-
-.vacio{
-    color:#6c757d;
-    font-weight:bold;
-}
-
-.fuera{
-    color:#dc3545;
-    font-weight:bold;
-}
-
-.insight{
-    background:#fff3cd;
-    padding:12px;
-    border-radius:10px;
-    font-size:13px;
-}
 
 .btn-danger{
     background:#000;
@@ -160,45 +139,576 @@ td button{
     cursor:pointer;
     margin-right:4px;
     font-size:14px;
+     
 }
 
 td button:hover{
     opacity:0.8;
 }
 
+
+/* 🔥 CARDS CHIDAS */
+
+.dashboard-grid{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:14px;
+
+    margin-bottom:20px;
+    margin-top:20px;
+
+}
+
+.stat-card{
+
+    background:white;
+
+    border-radius:14px;
+
+    padding:14px 16px;
+
+    width:170px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    box-shadow:
+    0 2px 8px rgba(0,0,0,0.05);
+
+    transition:0.2s;
+
+}
+
+.stat-card:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+    0 4px 12px rgba(0,0,0,0.08);
+
+}
+
+.stat-icon{
+
+    width:44px;
+    height:44px;
+
+    min-width:44px;
+
+    border-radius:12px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:20px;
+
+}
+
+.stat-info{
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+}
+
+.stat-title{
+
+    font-size:13px;
+
+    color:#6b7280;
+
+    margin-bottom:2px;
+
+}
+
+.stat-number{
+
+    font-size:28px;
+
+    font-weight:bold;
+
+    color:#111827;
+
+}
+/* 🔥 SEARCH PREMIUM */
+
+.search-box{
+
+    background:white;
+
+    border-radius:14px;
+
+    padding:0 16px;
+
+    height:56px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    box-shadow:
+    0 2px 8px rgba(0,0,0,0.05);
+
+    margin-bottom:16px;
+
+}
+
+.search-box i{
+
+    color:#9ca3af;
+
+    width:20px;
+
+    height:20px;
+
+}
+
+.search-box input{
+
+    border:none;
+
+    outline:none;
+
+    width:100%;
+
+    font-size:15px;
+
+    background:transparent;
+
+    color:#111827;
+
+}
+
+.search-box input::placeholder{
+
+    color:#9ca3af;
+
+}
+/* 🔥 APP LAYOUT */
+
+.app-layout{
+
+    display:flex;
+
+    min-height:100vh;
+
+}
+
+/* 🔥 SIDEBAR */
+
+.sidebar{
+
+    width:280px;
+
+    overflow-y:auto;
+
+    background:
+    linear-gradient(
+        180deg,
+        #0f172a,
+        #111827
+    );
+
+    color:white;
+
+    padding:24px 18px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:10px;
+
+    height:100vh;
+
+    position:sticky;
+
+    top:0;
+
+}
+
+
+/* LOGO */
+
+.sidebar-logo{
+
+      font-size:28px;
+
+    font-weight:800;
+
+    line-height:1.2;
+
+    margin-bottom:32px;
+
+}
+
+/* MENUS */
+
+.sidebar-menu{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:6px;
+
+}
+
+/* ITEMS */
+
+.menu-item{
+
+  display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    padding:14px 16px;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    transition:0.2s;
+
+    color:#cbd5e1;
+
+    font-size:19px;
+
+    font-weight:600;
+
+}
+
+.menu-item:hover{
+
+    background:rgba(255,255,255,0.08);
+
+}
+
+/* ACTIVO */
+
+.menu-item.active{
+
+    background:#2563eb;
+
+    color:white;
+
+}
+
+/* ICONOS */
+
+.menu-item svg{
+
+     width:26px;
+
+    height:26px;
+
+    stroke-width:2.2;
+
+}
+
+/* TITULOS */
+
+.sidebar-section{
+
+      margin-top:22px;
+
+    margin-bottom:10px;
+
+    font-size:13px;
+
+    color:#64748b;
+
+    font-weight:700;
+
+    letter-spacing:1px;
+
+}
+
+/* CONTENIDO */
+
+.main-content{
+
+    flex:1;
+
+    padding:20px;
+
+}
+/* 🔥 INSIGHT */
+
+.insight-card{
+
+    margin: top 60px;;
+
+    background:
+    linear-gradient(
+        180deg,
+        rgba(255,255,255,0.06),
+        rgba(255,255,255,0.03)
+    );
+
+    border-radius:16px;
+
+    padding:16px;
+
+    color:white;
+
+    box-shadow:
+    0 4px 14px rgba(0,0,0,0.25);
+    
+
+}
+
+.insight-top{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    margin-bottom:10px;
+
+}
+
+.insight-top svg{
+
+    width:16px;
+    height:16px;
+
+    color:#facc15;
+
+}
+
+.insight-title{
+color: #36b9f5;
+    font-size:20px;
+text-align: center;
+    font-weight:600;
+
+}
+
+.insight-text{
+
+    font-size:16px;
+
+    line-height:1.6;
+
+    color:#cbd5e1;
+
+}
+.icons-left svg{
+
+    width:40px;
+
+    height:40px;
+
+}
+/* 🔥 MINI ZONAS */
+
+.zonas-mini{
+
+    margin-top:20px;
+
+    background:
+    rgba(255,255,255,0.04);
+
+    border-radius:16px;
+
+    padding:16px;
+
+}
+
+.zonas-title{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    margin-bottom:14px;
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:600;
+
+}
+
+.zonas-title svg{
+
+    width:18px;
+
+    height:18px;
+
+    color:#38bdf8;
+
+}
+
+/* ITEM */
+
+.zona-item{
+
+    margin-bottom:12px;
+
+}
+
+.zona-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    margin-bottom:6px;
+
+    font-size:13px;
+
+    color:#cbd5e1;
+
+}
+
+.zona-bar{
+
+    height:8px;
+
+    border-radius:999px;
+
+    background:
+    rgba(255,255,255,0.08);
+
+    
+
+}
+
+.zona-fill{
+
+    height:100%;
+
+    border-radius:999px;
+
+}
 </style>
 </head>
 
+
+   
+
+
 <body>
+<div class="app-layout">
 
-<button onclick="borrarTodo()" class="btn-danger">
-    🧨 Reiniciar Censo
-</button>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
 
-<button onclick="exportarExcel()" class="btn-info">
-    📊 Descargar Excel
-</button>
+       
 
-<h2>🛏️ Censo Trailas Cajon</h2>
+        <div class="sidebar-menu">
 
-<div style="margin:15px 0;">
-    <input
-        type="text"
-        id="search"
-        placeholder="🔍 Buscar por QR, nombre o traila..."
-        onkeyup="filtrarTabla()"
-        style="
-            width:100%;
-            padding:12px;
-            border-radius:10px;
-            border:1px solid #ccc;
-            font-size:16px;
-        "
-    >
+            <div class="menu-item active">
+
+                <i data-lucide="layout-dashboard" width="22" height="22"></i>
+
+                <span>Dashboard</span>
+
+            </div>
+
+            <div class="menu-item">
+
+                <i data-lucide="bed-double"></i>
+
+                <span>Mapa de Camas</span>
+
+            </div>
+
+            <div class="menu-item">
+
+                <i data-lucide="users" style="color: #facc15;"></i>
+
+                <span>Trabajadores</span>
+
+            </div>
+
+        </div>
+
+
+        <div class="sidebar-section">
+ <div class="menu-item" onclick="borrarTodo()" class="btn-danger">
+
+                <i data-lucide="rotate-ccw" style="color: #ff0000;"></i>
+
+                <span>Reiniciar Censo</span>
+
+            </div>
+
+        </div>
+
+
+        <div class="menu-item" onclick="exportarExcel()" class="btn-info">
+
+            <i data-lucide="file-spreadsheet" style="color: #16a34a;" ></i>
+
+            <span>Exportar Excel</span>
+
+        </div>
+        
+<div class="insight-card">
+
+    <div class="insight-top">
+
+        <i data-lucide="lightbulb"></i>
+
+        <div class="insight-title">
+            Insight
+        </div>
+
+    </div>
+
+    <div class="insight-text">
+
+        La ocupación general es del 72%.
+        Hay 28 camas disponibles.
+
+    </div>
+
 </div>
 
+<div class="zonas-mini">
+
+    <div class="zonas-title">
+
+        <i data-lucide="map-pinned"></i>
+
+        <span>Zonas</span>
+
+    </div>
+
+    <div id="zonasMini"></div>
+
+</div>
+    </aside>
+
+    <!-- CONTENIDO -->
+    <main class="main-content">
+
 <!-- ZONAS -->
-<div class="zonas-box">
+<div class="zonas-box" style="display:none;">
 
     <div class="zonas-header">
         <h3>📍 Zonas</h3>
@@ -207,11 +717,168 @@ td button:hover{
 
     <div class="bars" id="zonas-bars"></div>
 
+
+
+// 🔥DASHOARD
+</div>
+        <div class="dashboard-grid">
+             <!-- TOTAL -->
+    <div class="stat-card">
+<div class="stat-icon"
+style="
+    background:#eef2ff;
+    color:#4f46e5;
+">
+
+    <i data-lucide="users"></i>
+
+</div>
+ <div class="stat-info">
+
+         <div class="stat-title">
+                Total
+            </div>
+      <div class="stat-number" id="total">
+                0
+            </div>
+  </div>
+
+    </div>
+
+<div class="stat-card">
+
+    <div class="stat-icon"
+    style="
+        background:#dcfce7;
+        color:#16a34a;
+    ">
+        <i data-lucide="badge-check"></i>
+    </div>
+
+    <div class="stat-info">
+
+        <div class="stat-title">
+            Ocupadas
+        </div>
+
+        <div class="stat-number" id="ocupadas">
+            0
+        </div>
+
+    </div>
+
+</div>
+<div class="stat-card">
+
+    <div class="stat-icon"
+    style="
+        background:#e5e7eb;
+        color:#6b7280;
+    ">
+       <i data-lucide="bed-single"></i>
+    </div>
+
+    <div class="stat-info">
+
+        <div class="stat-title">
+            Vacías
+        </div>
+
+        <div class="stat-number" id="vacias">
+            0
+        </div>
+
+    </div>
+
 </div>
 
-<div class="main-layout">
+<div class="stat-card">
 
-<div class="left-panel">
+    <div class="stat-icon"
+    style="
+        background:#fee2e2;
+        color:#dc2626;
+    ">
+       <i data-lucide="user-x"></i>
+    </div>
+
+    <div class="stat-info">
+
+        <div class="stat-title">
+            Fuera
+        </div>
+
+        <div class="stat-number" id="fuera">
+            0
+        </div>
+
+    </div>
+
+</div>
+
+<div class="stat-card">
+
+    <div class="stat-icon"
+    style="
+        background:#dbeafe;
+        color:#2563eb;
+    ">
+       <i data-lucide="user"></i>
+    </div>
+
+    <div class="stat-info">
+
+        <div class="stat-title">
+            Hombres
+        </div>
+
+        <div class="stat-number" id="hombres">
+            0
+        </div>
+
+    </div>
+
+</div>
+
+<div class="stat-card">
+
+    <div class="stat-icon"
+    style="
+        background:#fce7f3;
+        color:#db2777;
+    ">
+        <i data-lucide="user-round"></i>
+    </div>
+
+    <div class="stat-info">
+
+        <div class="stat-title">
+            Mujeres
+        </div>
+
+        <div class="stat-number" id="mujeres">
+            0
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</div>
+
+
+<div class="search-box">
+
+    <i data-lucide="search"></i>
+
+    <input
+    type="text"
+    id="buscar"
+    placeholder="Buscar por QR, nombre o traila...">
+
+</div>
 
 <table>
 
@@ -238,53 +905,20 @@ td button:hover{
 
 <tbody id="tabla"></tbody>
 
+
 </table>
 
 </div>
 
 <div class="right-panel">
 
-<h3>📊 Dashboard</h3>
-
-<div class="card blue">
-    Total
-    <h2 id="total">0</h2>
-</div>
-
-<div class="card green">
-    Ocupadas
-    <h2 id="ocupadas">0</h2>
-</div>
-
-<div class="card gray">
-    Vacías
-    <h2 id="vacias">0</h2>
-</div>
-
-<div class="card red">
-    Fuera
-    <h2 id="fuera">0</h2>
-</div>
-
-<div class="card purple">
-    Hombres
-    <h2 id="hombres">0</h2>
-</div>
-
-<div class="card pink">
-    Mujeres
-    <h2 id="mujeres">0</h2>
-</div>
-
-<div class="insight">
-    <b>Insight:</b>
-    <p id="insight-text"></p>
-</div>
 
 </div>
 </div>
 
 <script>
+    // 🔥 ICONOS DASHBOARD
+ lucide.createIcons();
 
 // 🔥 CONFIG
 var firebaseConfig = {
@@ -426,17 +1060,19 @@ function render(){
             <td>
 
                 <button
+                    style="color:#f97316;"
                     onclick="editarTrabajador('${p.key}')"
                     title="Editar trabajador"
                 >
-                    ✏️
+                    <i data-lucide="square-pen"></i>
                 </button>
 
                 <button
+                    style="color:#7c3aed;"
                     onclick="vaciarCama('${p.key}')"
                     title="Vaciar cama"
                 >
-                    🛏️
+                      <i data-lucide="bed-single"></i>
                 </button>
 
             </td>
@@ -445,7 +1081,7 @@ function render(){
     });
 
     document.getElementById("tabla").innerHTML = html;
-
+lucide.createIcons();
     document.getElementById("total").innerText = lista.length;
     document.getElementById("ocupadas").innerText = ocupadas;
     document.getElementById("vacias").innerText = vacias;
@@ -456,49 +1092,74 @@ function render(){
     document.getElementById("total-zonas").innerText =
     lista.length + " personas";
 
-    // 🔥 ZONAS
-    let max = Math.max(...Object.values(zonas), 1);
+   
+    // 🔥 TOP ZONAS
 
-    let colores = [
-        "#3b82f6",
-        "#22c55e",
-        "#f59e0b",
-        "#ef4444",
-        "#8b5cf6"
-    ];
+let colores = [
 
-    let zhtml = "";
+    "#3b82f6",
+    "#22c55e",
+    "#f59e0b",
+    "#ec4899",
+    "#8b5cf6",
+    "#3b82f6",
+    "#22c55e",
+    "#f59e0b",
+    "#ec4899",
+    "#8b5cf6"
+];
 
-    Object.entries(zonas)
-    .sort((a,b)=>b[1]-a[1])
-    .forEach(([zona,val],i)=>{
+let topZonas =
+Object.entries(zonas)
+.sort((a,b)=>b[1]-a[1])
+.slice(0,10);
 
-        let h = (val/max)*150;
+let zonasHTML = "";
 
-        let porcentaje = ((val/lista.length)*100).toFixed(1);
+topZonas.forEach((z,index)=>{
 
-        zhtml += `
-        <div class="bar">
+    let nombre = z[0];
+
+    let total = z[1];
+
+    let porcentaje =
+    (total / ocupadas) * 100;
+
+    zonasHTML += `
+
+    <div class="zona-item">
+
+        <div class="zona-top">
+
+            <span>${nombre}</span>
+
+            <span>${total}</span>
+
+        </div>
+
+        <div class="zona-bar">
+
             <div
-                class="fill"
-                style="
-                    height:${h}px;
-                    background:${colores[i%colores.length]}
-                ">
+            class="zona-fill"
+            style="
+            width:${porcentaje}%;
+            background:${colores[index]};
+            ">
             </div>
 
-            <small>
-                ${val} (${porcentaje}%)
-            </small>
+        </div>
 
-            <div style="font-size:10px">
-                ${zona}
-            </div>
-        </div>`;
+    </div>
 
-    });
+    `;
 
-    document.getElementById("zonas-bars").innerHTML = zhtml;
+});
+
+document
+.getElementById("zonasMini")
+.innerHTML = zonasHTML;
+
+lucide.createIcons();
 
     // 🔥 INSIGHT
     let porcentaje = ((ocupadas/lista.length)*100).toFixed(1);
@@ -566,288 +1227,6 @@ function ordenarPor(campo){
 
 }
 
-// ✏️ EDITAR
-function editarTrabajador(key){
-
-    let trabajador = lista.find(p => p.key == key);
-
-    if(!trabajador){
-        alert("Trabajador no encontrado");
-        return;
-    }
-
-    let nuevoID = prompt("ID:", trabajador.id || "");
-    if(nuevoID === null) return;
-// 🔥 VALIDAR SI EL ID YA ESTA OCUPADO
-db.ref("censo_cajon")
-.orderByChild("id")
-.equalTo(texto(nuevoID))
-.once("value", snapshot => {
-
-    let encontrado = null;
-
-    snapshot.forEach(child => {
-
-        let d = child.val();
-
-        if(
-            child.key !== key &&
-            d.estado === ESTADOS.OCUPADO
-        ){
-
-            encontrado = {
-                key: child.key,
-                traila: d.traila,
-                cama: d.cama
-            };
-
-        }
-
-    });
-
-    // 🔥 SI YA TIENE CAMA
-    if(encontrado){
-
-        let confirmar = confirm(
-            `⚠️ El trabajador ya está en la Traila ${encontrado.traila} Cama ${encontrado.cama}\n\n¿Deseas moverlo a esta cama?`
-        );
-
-        if(!confirmar){
-            return;
-        }
-
-        // 🔥 VACIAR CAMA ANTERIOR
-        db.ref("censo_cajon/" + encontrado.key).update({
-
-            id:"",
-            nombre:"",
-            apellidos:"",
-            sexo:"",
-            estado:ESTADOS.VACIA
-
-        });
-
-    }
-
-    // 🔥 CONTINUAR CON LOS DEMAS DATOS
-    });
-    let nuevoNombre = prompt("Nombre:", trabajador.nombre || "");
-    if(nuevoNombre === null) return;
-
-    let nuevosApellidos = prompt("Apellidos:", trabajador.apellidos || "");
-    if(nuevosApellidos === null) return;
-
-    let nuevoSexo = prompt("Sexo:", trabajador.sexo || "");
-    if(nuevoSexo === null) return;
-
-    let nuevoEstado = prompt("Estado:", trabajador.estado || "");
-    let nuevaTraila = prompt("Traila:", trabajador.traila || "");
-if(nuevaTraila === null) return;
-
-let nuevaCama = prompt("Cama:", trabajador.cama || "");
-if(nuevaCama === null) return;
-    if(nuevoEstado === null) return;
-
-    // 🔥 VALIDAR DUPLICADO
-    db.ref("censo_cajon")
-    .orderByChild("id")
-    .equalTo(texto(nuevoID))
-    .once("value", snapshot => {
-
-        let duplicado = false;
-
-        snapshot.forEach(child => {
-
-            let d = child.val();
-
-            if(child.key !== key && d.estado === ESTADOS.OCUPADO){
-                duplicado = true;
-            }
-
-        });
-
-        if(duplicado){
-
-            alert("⚠️ Ese ID ya está asignado");
-            return;
-        }
-
-      let nuevaKey = nuevaTraila + "_" + nuevaCama;
-
-// 🔥 VALIDAR NUEVA CAMA
-db.ref("censo_cajon/" + nuevaKey)
-.once("value", snap => {
-
-    let cama = snap.val();
-
-    // 🚫 SI LA CAMA ESTA OCUPADA POR OTRO
-    if(
-        cama &&
-        cama.estado === ESTADOS.OCUPADO &&
-        cama.id !== texto(nuevoID)
-    ){
-
-        alert("⚠️ Esa cama ya está ocupada");
-        return;
-    }
-
-    // 🔥 SI CAMBIO DE CAMA
-    if(nuevaKey !== key){
-
-        let confirmar = confirm(
-            `⚠️ El trabajador será movido a la Traila ${nuevaTraila} Cama ${nuevaCama}\n\n¿Deseas continuar?`
-        );
-
-        if(!confirmar){
-            return;
-        }
-
-        // 🔥 VACIAR CAMA ANTERIOR
-        db.ref("censo_cajon/" + key).update({
-
-            id:"",
-            nombre:"",
-            apellidos:"",
-            sexo:"",
-            estado:ESTADOS.VACIA
-
-        });
-
-    }
-
-    // 🔥 GUARDAR NUEVA ASIGNACION
-    db.ref("censo_cajon/" + nuevaKey).set({
-
-        id: texto(nuevoID),
-        nombre: texto(nuevoNombre),
-        apellidos: texto(nuevosApellidos),
-        traila: nuevaTraila,
-        cama: nuevaCama,
-        sexo: texto(nuevoSexo),
-        estado: texto(nuevoEstado)
-
-    });
-
-});
-
-        alert("✅ Trabajador actualizado");
-
-    });
-
-}
-
-// 🛏️ VACIAR CAMA
-function vaciarCama(key){
-
-    if(confirm("¿Marcar cama como VACIA?")){
-
-        db.ref("censo_cajon/" + key).update({
-
-            id:"",
-            nombre:"",
-            apellidos:"",
-            sexo:"",
-            estado:ESTADOS.VACIA
-
-        });
-
-    }
-
-}
-
-// 🔥 VALIDAR Y GUARDAR
-function validarYGuardar(datos){
-
-    let key = datos.traila + "_" + datos.cama;
-
-    // 🔥 BUSCAR SI EL TRABAJADOR YA EXISTE
-    db.ref("censo_cajon")
-    .orderByChild("id")
-    .equalTo(texto(datos.id))
-    .once("value", snapshot => {
-
-        let camaAnterior = null;
-
-        snapshot.forEach(child => {
-
-            let d = child.val();
-
-            if(
-                child.key !== key &&
-                d.estado === ESTADOS.OCUPADO
-            ){
-
-                camaAnterior = {
-                    key: child.key,
-                    traila: d.traila,
-                    cama: d.cama
-                };
-
-            }
-
-        });
-
-        // 🔥 VALIDAR CAMA NUEVA
-        db.ref("censo_cajon/" + key)
-        .once("value", snap => {
-
-            let cama = snap.val();
-
-            // 🚫 SI LA NUEVA CAMA ESTA OCUPADA POR OTRO
-            if(
-                cama &&
-                cama.estado === ESTADOS.OCUPADO &&
-                texto(cama.id) !== texto(datos.id)
-            ){
-
-                alert("⚠️ Esa cama ya está ocupada");
-                return;
-            }
-
-            // 🔥 SI YA TIENE CAMA
-            if(camaAnterior){
-
-                let confirmar = confirm(
-                    `⚠️ El trabajador ya está en la Traila ${camaAnterior.traila} Cama ${camaAnterior.cama}\n\n¿Deseas moverlo a la Traila ${datos.traila} Cama ${datos.cama}?`
-                );
-
-                if(!confirmar){
-                    return;
-                }
-
-                // 🔥 VACIAR CAMA ANTERIOR
-                db.ref("censo_cajon/" + camaAnterior.key).update({
-
-                    id:"",
-                    nombre:"",
-                    apellidos:"",
-                    sexo:"",
-                    estado:ESTADOS.VACIA
-
-                });
-
-            }
-
-            // 🔥 GUARDAR NUEVA ASIGNACION
-            db.ref("censo_cajon/" + key).set({
-
-                id: texto(datos.id),
-                nombre: texto(datos.nombre),
-                apellidos: texto(datos.apellidos),
-                traila: datos.traila,
-                cama: datos.cama,
-                sexo: texto(datos.sexo),
-                estado: ESTADOS.OCUPADO
-
-            });
-
-            alert("✅ Trabajador asignado");
-
-        });
-
-    });
-
-}
 
 // 🔥 EXCEL
 function exportarExcel(){
@@ -862,6 +1241,273 @@ function exportarExcel(){
 
 }
 
+
+// ✏️ EDITAR
+function editarTrabajador(key){
+
+    let trabajador = lista.find(p => p.key == key);
+
+    if(!trabajador){
+
+        Swal.fire({
+            icon:'error',
+            title:'Error',
+            text:'Trabajador no encontrado'
+        });
+
+        return;
+    }
+
+    Swal.fire({
+
+        title:'Editar trabajador',
+
+        width:700,
+
+        html:`
+
+            <div style="
+                display:grid;
+                grid-template-columns:1fr 1fr;
+                gap:10px;
+            ">
+
+                <input id="swal-id"
+                    class="swal2-input"
+                    placeholder="ID"
+                    value="${trabajador.id || ''}">
+
+                <input id="swal-nombre"
+                    class="swal2-input"
+                    placeholder="Nombre"
+                    value="${trabajador.nombre || ''}">
+
+                <input id="swal-apellidos"
+                    class="swal2-input"
+                    placeholder="Apellidos"
+                    value="${trabajador.apellidos || ''}">
+
+                <input id="swal-sexo"
+                    class="swal2-input"
+                    placeholder="Sexo"
+                    value="${trabajador.sexo || ''}">
+
+                <input id="swal-traila"
+                    class="swal2-input"
+                    placeholder="Traila"
+                    value="${trabajador.traila || ''}">
+
+                <input id="swal-cama"
+                    class="swal2-input"
+                    placeholder="Cama"
+                    value="${trabajador.cama || ''}">
+
+                <input id="swal-estado"
+                    class="swal2-input"
+                    placeholder="Estado"
+                    value="${trabajador.estado || ''}">
+
+            </div>
+
+        `,
+
+        showCancelButton:true,
+        confirmButtonText:'Guardar',
+        cancelButtonText:'Cancelar',
+        confirmButtonColor:'#3085d6',
+
+        preConfirm:()=>{
+
+            return {
+
+                nuevoID:
+                    document.getElementById('swal-id').value,
+
+                nuevoNombre:
+                    document.getElementById('swal-nombre').value,
+
+                nuevosApellidos:
+                    document.getElementById('swal-apellidos').value,
+
+                nuevoSexo:
+                    document.getElementById('swal-sexo').value,
+
+                nuevaTraila:
+                    document.getElementById('swal-traila').value,
+
+                nuevaCama:
+                    document.getElementById('swal-cama').value,
+
+                nuevoEstado:
+                    document.getElementById('swal-estado').value
+
+            };
+
+        }
+
+    }).then((result)=>{
+
+        if(!result.isConfirmed){
+            return;
+        }
+
+        let {
+            nuevoID,
+            nuevoNombre,
+            nuevosApellidos,
+            nuevoSexo,
+            nuevaTraila,
+            nuevaCama,
+            nuevoEstado
+        } = result.value;
+
+        // 🔥 VALIDAR SI EL ID YA ESTA OCUPADO
+        db.ref("censo_cajon")
+        .orderByChild("id")
+        .equalTo(texto(nuevoID))
+        .once("value", snapshot => {
+
+            let encontrado = null;
+
+            snapshot.forEach(child => {
+
+                let d = child.val();
+
+                if(
+                    child.key !== key &&
+                    d.estado === ESTADOS.OCUPADO
+                ){
+
+                    encontrado = {
+                        key: child.key,
+                        traila: d.traila,
+                        cama: d.cama
+                    };
+
+                }
+
+            });
+
+            // 🔥 SI YA TIENE CAMA
+            if(encontrado){
+
+                Swal.fire({
+
+                    title:'Trabajador ya asignado',
+                    text:
+                    `Actualmente está en Traila ${encontrado.traila} Cama ${encontrado.cama}`,
+
+                    icon:'warning',
+
+                    showCancelButton:true,
+
+                    confirmButtonText:'Mover trabajador',
+                    cancelButtonText:'Cancelar'
+
+                }).then((moveResult)=>{
+
+                    if(!moveResult.isConfirmed){
+                        return;
+                    }
+
+                    moverTrabajador();
+
+                });
+
+            }
+            else{
+
+                moverTrabajador();
+
+            }
+
+            // 🔥 FUNCION INTERNA
+            function moverTrabajador(){
+
+                let nuevaKey = nuevaTraila + "_" + nuevaCama;
+
+                // 🔥 VALIDAR NUEVA CAMA
+                db.ref("censo_cajon/" + nuevaKey)
+                .once("value", snap => {
+
+                    let cama = snap.val();
+
+                    // 🚫 SI LA CAMA ESTA OCUPADA
+                    if(
+                        cama &&
+                        cama.estado === ESTADOS.OCUPADO &&
+                        texto(cama.id) !== texto(nuevoID)
+                    ){
+
+                        Swal.fire({
+                            icon:'warning',
+                            title:'Cama ocupada',
+                            text:'Esa cama ya está ocupada'
+                        });
+
+                        return;
+                    }
+
+                    // 🔥 VACIAR CAMA ANTERIOR
+                    if(encontrado){
+
+                        db.ref("censo_cajon/" + encontrado.key).update({
+
+                            id:"",
+                            nombre:"",
+                            apellidos:"",
+                            sexo:"",
+                            estado:ESTADOS.VACIA
+
+                        });
+
+                    }
+
+                    // 🔥 SI CAMBIO DE CAMA
+                    if(nuevaKey !== key){
+
+                        db.ref("censo_cajon/" + key).update({
+
+                            id:"",
+                            nombre:"",
+                            apellidos:"",
+                            sexo:"",
+                            estado:ESTADOS.VACIA
+
+                        });
+
+                    }
+
+                    // 🔥 GUARDAR NUEVA ASIGNACION
+                    db.ref("censo_cajon/" + nuevaKey).set({
+
+                        id: texto(nuevoID),
+                        nombre: texto(nuevoNombre),
+                        apellidos: texto(nuevosApellidos),
+                        traila: nuevaTraila,
+                        cama: nuevaCama,
+                        sexo: texto(nuevoSexo),
+                        estado: texto(nuevoEstado)
+
+                    });
+
+                    Swal.fire({
+                        icon:'success',
+                        title:'Actualizado',
+                        text:'Trabajador actualizado correctamente',
+                        confirmButtonColor:'#3085d6'
+                    });
+
+                });
+
+            }
+
+        });
+
+    });
+
+}
+
 // 🔥 BORRAR TODO
 function borrarTodo(){
 
@@ -872,8 +1518,54 @@ function borrarTodo(){
     }
 
 }
+// 🔥 BUSCADOR
+window.addEventListener("DOMContentLoaded", ()=>{
 
+    document
+    .getElementById("buscar")
+    .addEventListener("input", e => {
+
+        let textoBusqueda =
+        e.target.value.toLowerCase();
+
+        listaFiltrada = lista.filter(item => {
+
+            return (
+
+                String(item.id || "")
+                .toLowerCase()
+                .includes(textoBusqueda)
+
+                ||
+
+                String(item.nombre || "")
+                .toLowerCase()
+                .includes(textoBusqueda)
+
+                ||
+
+                String(item.apellidos || "")
+                .toLowerCase()
+                .includes(textoBusqueda)
+
+                ||
+
+                String(item.traila || "")
+                .toLowerCase()
+                .includes(textoBusqueda)
+
+            );
+
+        });
+
+        render();
+
+    });
+
+});
 </script>
+</main>
 
+</div>
 </body>
 </html>
