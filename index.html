@@ -9,6 +9,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+
 <style>
 
 body{
@@ -852,25 +856,13 @@ text-align: center;
 
                 <i data-lucide="layout-dashboard" width="22" height="22"></i>
 
-                <span>Dashboard</span>
+                <span>Campo Cajon</span>
 
             </div>
 
-            <div class="menu-item">
+           
 
-                <i data-lucide="bed-double"></i>
-
-                <span>Mapa de Camas</span>
-
-            </div>
-
-            <div class="menu-item">
-
-                <i data-lucide="users" style="color: #facc15;"></i>
-
-                <span>Trabajadores</span>
-
-            </div>
+          
 
         </div>
 
@@ -887,7 +879,7 @@ text-align: center;
         </div>
 
 
-        <div class="menu-item" onclick="exportarExcel()" class="btn-info">
+        <div class="menu-item" onclick="exportarExcelBonito()" class="btn-info">
 
             <i data-lucide="file-spreadsheet" style="color: #16a34a;" ></i>
 
@@ -907,13 +899,12 @@ text-align: center;
 
     </div>
 
-    <div class="insight-text">
-
-        La ocupación general es del 72%.
-        Hay 28 camas disponibles.
-
+    <div class="insight-text" id="insight-percent">
+0
     </div>
-
+     <div class="insight-text" id="insight-disp">
+0
+    </div>
 </div>
 
 <div class="zonas-mini">
@@ -1410,7 +1401,7 @@ lucide.createIcons();
 
     // 🔥 INSIGHT
     let porcentaje = ((ocupadas/lista.length)*100).toFixed(1);
-
+    let disp = (lista.length-ocupadas);
     let textoInsight = "🟢 Baja ocupación";
 
     if(porcentaje > 80){
@@ -1420,9 +1411,14 @@ lucide.createIcons();
         textoInsight = "⚠️ Ocupación media";
     }
 
-    //document.getElementById("insight-text").innerText =
-    //`${textoInsight} (${porcentaje}%)`;
-// 🔥 MAPA RELACIONADO
+    document.getElementById("insight-percent").innerText =
+    `${textoInsight} (${porcentaje}%)`;
+
+    document.getElementById("insight-disp").innerText =
+    `Hay ${disp} camas disponibles`;
+   
+    
+    // 🔥 MAPA RELACIONADO
 
 let listaMapa = [...lista];
 
@@ -1952,6 +1948,225 @@ function vaciarCama(key){
         );
 
     });
+
+}
+// 🔥 PORCENTAJE GENERAL
+
+let porcentajeGeneral =
+
+Math.round(
+    (ocupadas / lista.length) * 100
+);
+
+// 🔥 MOSTRAR %
+
+document
+.getElementById("porcentajeGeneral")
+.innerText =
+
+porcentajeGeneral + "%";
+
+// 🔥 MOSTRAR VACIAS
+
+document
+.getElementById("camasVacias")
+.innerText =
+
+vacias;
+
+
+// 🔥 EXPORTAR EXCEL BONITO
+async function exportarExcelBonito(){
+
+    console.log("🔥 EXPORTANDO...");
+
+    // 🔥 CALCULOS
+    let ocupadas =
+
+    lista.filter(
+        p => p.estado === "OCUPADO"
+    ).length;
+
+    let vacias =
+    lista.length - ocupadas;
+
+    let porcentaje =
+
+    (
+        (ocupadas / lista.length)
+        * 100
+    )
+
+    .toFixed(1);
+
+    // 🔥 WORKBOOK
+    const workbook =
+    new ExcelJS.Workbook();
+
+    const sheet =
+    workbook.addWorksheet(
+        "Reporte General"
+    );
+
+    // 🔥 TITULO
+    sheet.mergeCells("A1:F1");
+
+    const titulo =
+    sheet.getCell("A1");
+
+    titulo.value =
+    "CAMPO CAJÓN - REPORTE GENERAL";
+
+    titulo.font = {
+
+        bold:true,
+        size:18
+
+    };
+
+    titulo.alignment = {
+
+        horizontal:"center"
+
+    };
+
+    // 🔥 ESPACIO
+    sheet.addRow([]);
+
+    // 🔥 DASHBOARD
+    sheet.addRow([
+        "Total",
+        lista.length
+    ]);
+
+    sheet.addRow([
+        "Ocupadas",
+        ocupadas
+    ]);
+
+    sheet.addRow([
+        "Vacías",
+        vacias
+    ]);
+
+    sheet.addRow([
+        "Ocupación",
+        porcentaje + "%"
+    ]);
+
+    // 🔥 ESPACIO
+    sheet.addRow([]);
+
+    // 🔥 HEADERS
+    const header =
+    sheet.addRow([
+
+        "ID",
+        "Nombre",
+        "Apellidos",
+        "Traila",
+        "Cama",
+        "Estado"
+
+    ]);
+
+    // 🔥 ESTILO HEADERS
+    header.eachCell(cell => {
+
+        cell.font = {
+
+            bold:true,
+
+            color:{
+                argb:"FFFFFF"
+            }
+
+        };
+
+        cell.fill = {
+
+            type:"pattern",
+
+            pattern:"solid",
+
+            fgColor:{
+                argb:"1F2937"
+            }
+
+        };
+
+    });
+
+    // 🔥 DATOS
+    lista.forEach(p => {
+
+        sheet.addRow([
+
+            p.id || "",
+            p.nombre || "",
+            p.apellidos || "",
+            p.traila || "",
+            p.cama || "",
+            p.estado || ""
+
+        ]);
+
+    });
+
+    // 🔥 ANCHO COLUMNAS
+    sheet.columns = [
+
+        { width:15 },
+        { width:25 },
+        { width:30 },
+        { width:10 },
+        { width:10 },
+        { width:15 }
+
+    ];
+
+    // 🔥 GENERAR BUFFER
+    const buffer =
+
+    await workbook.xlsx.writeBuffer();
+
+    // 🔥 BLOB
+    const blob = new Blob(
+
+        [buffer],
+
+        {
+
+            type:
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+        }
+
+    );
+
+    // 🔥 URL
+    const url =
+    window.URL.createObjectURL(blob);
+
+    // 🔥 DESCARGAR
+    const a =
+    document.createElement("a");
+
+    a.href = url;
+
+    a.download =
+    "Reporte_Campo_Cajon.xlsx";
+
+    document.body.appendChild(a);
+
+    a.click();
+
+    document.body.removeChild(a);
+
+    // 🔥 LIMPIAR
+    window.URL.revokeObjectURL(url);
+
+    console.log("✅ Excel descargado");
 
 }
 </script>
