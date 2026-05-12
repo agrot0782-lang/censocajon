@@ -1997,7 +1997,6 @@ async function exportarExcelBonito(){
 
     // 🔥 CALCULOS
     let ocupadas =
-
     lista.filter(
         p => p.estado === "OCUPADO"
     ).length;
@@ -2024,7 +2023,7 @@ async function exportarExcelBonito(){
     );
 
     // 🔥 TITULO
-    sheet.mergeCells("A1:F1");
+    sheet.mergeCells("A1:L1");
 
     const titulo =
     sheet.getCell("A1");
@@ -2035,15 +2034,33 @@ async function exportarExcelBonito(){
     titulo.font = {
 
         bold:true,
-        size:18
+        size:18,
+        color:{
+            argb:"FFFFFF"
+        }
+
+    };
+
+    titulo.fill = {
+
+        type:"pattern",
+
+        pattern:"solid",
+
+        fgColor:{
+            argb:"2563EB"
+        }
 
     };
 
     titulo.alignment = {
 
-        horizontal:"center"
+        horizontal:"center",
+        vertical:"middle"
 
     };
+
+    sheet.getRow(1).height = 28;
 
     // 🔥 ESPACIO
     sheet.addRow([]);
@@ -2081,6 +2098,12 @@ async function exportarExcelBonito(){
         "Apellidos",
         "Traila",
         "Cama",
+        "Sexo",
+        "Zona",
+        "Actividad",
+        "Supervisor",
+        "Grupo",
+        "Centro Costo",
         "Estado"
 
     ]);
@@ -2105,7 +2128,34 @@ async function exportarExcelBonito(){
             pattern:"solid",
 
             fgColor:{
-                argb:"1F2937"
+                argb:"111827"
+            }
+
+        };
+
+        cell.alignment = {
+
+            horizontal:"center",
+            vertical:"middle"
+
+        };
+
+        cell.border = {
+
+            top:{
+                style:"thin"
+            },
+
+            left:{
+                style:"thin"
+            },
+
+            bottom:{
+                style:"thin"
+            },
+
+            right:{
+                style:"thin"
             }
 
         };
@@ -2113,31 +2163,172 @@ async function exportarExcelBonito(){
     });
 
     // 🔥 DATOS
-    lista.forEach(p => {
+    listaFiltrada.forEach(p => {
 
-        sheet.addRow([
+        let zona =
+        trabajadores[p.id]?.zona || "";
+
+        let area =
+        areas[p.id] || {};
+
+        let row = sheet.addRow([
 
             p.id || "",
             p.nombre || "",
             p.apellidos || "",
             p.traila || "",
             p.cama || "",
+            p.sexo || "",
+            zona || "",
+            area.actividad || "",
+            area.supervisor || "",
+            area.grupo || "",
+            area.centro_costo || "",
             p.estado || ""
 
         ]);
+
+        // 🔥 COLOR ESTADO
+        let estadoCell =
+        row.getCell(12);
+
+        if(p.estado === "OCUPADO"){
+
+            estadoCell.fill = {
+
+                type:"pattern",
+
+                pattern:"solid",
+
+                fgColor:{
+                    argb:"DCFCE7"
+                }
+
+            };
+
+            estadoCell.font = {
+
+                bold:true,
+
+                color:{
+                    argb:"166534"
+                }
+
+            };
+
+        }
+
+        if(p.estado === "VACIA"){
+
+            estadoCell.fill = {
+
+                type:"pattern",
+
+                pattern:"solid",
+
+                fgColor:{
+                    argb:"E5E7EB"
+                }
+
+            };
+
+            estadoCell.font = {
+
+                bold:true,
+
+                color:{
+                    argb:"374151"
+                }
+
+            };
+
+        }
+
+        if(p.estado === "FUERA"){
+
+            estadoCell.fill = {
+
+                type:"pattern",
+
+                pattern:"solid",
+
+                fgColor:{
+                    argb:"FEE2E2"
+                }
+
+            };
+
+            estadoCell.font = {
+
+                bold:true,
+
+                color:{
+                    argb:"991B1B"
+                }
+
+            };
+
+        }
+
+        // 🔥 BORDES
+        row.eachCell(cell => {
+
+            cell.border = {
+
+                top:{
+                    style:"thin"
+                },
+
+                left:{
+                    style:"thin"
+                },
+
+                bottom:{
+                    style:"thin"
+                },
+
+                right:{
+                    style:"thin"
+                }
+
+            };
+
+        });
 
     });
 
     // 🔥 ANCHO COLUMNAS
     sheet.columns = [
 
-        { width:15 },
-        { width:25 },
-        { width:30 },
-        { width:10 },
-        { width:10 },
-        { width:15 }
+        { width:15 }, // ID
+        { width:25 }, // Nombre
+        { width:35 }, // Apellidos
+        { width:10 }, // Traila
+        { width:10 }, // Cama
+        { width:15 }, // Sexo
+        { width:20 }, // Zona
+        { width:35 }, // Actividad
+        { width:35 }, // Supervisor
+        { width:18 }, // Grupo
+        { width:25 }, // Centro costo
+        { width:15 }  // Estado
 
+    ];
+
+    // 🔥 FILTROS
+    sheet.autoFilter = {
+
+        from:"A7",
+        to:"L7"
+
+    };
+
+    // 🔥 CONGELAR HEADERS
+    sheet.views = [
+        {
+            state:"frozen",
+            ySplit:7
+        }
     ];
 
     // 🔥 GENERAR BUFFER
