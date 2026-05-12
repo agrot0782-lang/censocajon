@@ -1119,6 +1119,7 @@ style="
 
 <th>Sexo</th>
 <th>Zona</th>
+<th>Actividad</th>
 <th>Estado</th>
 <th>Acciones</th>
 </tr>
@@ -1179,12 +1180,12 @@ const ESTADOS = {
 let lista = [];
 let listaFiltrada = [];
 let trabajadores = {};
-
+let areas = {};
 let ordenActual = {
     campo:"",
     asc:true
 };
-
+let dataAreas = false;
 let dataCenso = false;
 let dataTrabajadores = false;
 
@@ -1196,6 +1197,16 @@ function texto(v){
 // 🔥 TRABAJADORES
 db.ref("trabajadores").on("value", snapshot => {
 
+// 🔥 AREAS
+db.ref("areas").on("value", snapshot => {
+
+    areas = snapshot.val() || {};
+
+    dataAreas = true;
+
+    intentarRender();
+
+});
     trabajadores = snapshot.val() || {};
 
     dataTrabajadores = true;
@@ -1203,6 +1214,8 @@ db.ref("trabajadores").on("value", snapshot => {
     intentarRender();
 
 });
+
+
 
 // 🔥 CENSO
  db.ref("censo_cajon").on("value", snapshot => {
@@ -1226,6 +1239,7 @@ db.ref("trabajadores").on("value", snapshot => {
 
     });
 
+
     listaFiltrada = [...lista];
 
     dataCenso = true;
@@ -1237,7 +1251,7 @@ db.ref("trabajadores").on("value", snapshot => {
 // 🔥 CONTROL
 function intentarRender(){
 
-    if(dataCenso && dataTrabajadores){
+    if(dataCenso && dataTrabajadores && areas){
         render();
     }
 
@@ -1271,7 +1285,7 @@ function render(){
     };
 
     listaFiltrada.forEach(p => {
-
+        let area = areas[p.id] || {};
         let clase = clases[p.estado] || "vacio";
 
         if(p.estado === ESTADOS.OCUPADO) ocupadas++;
@@ -1294,6 +1308,7 @@ function render(){
             <td>${p.cama}</td>
             <td>${p.sexo}</td>
             <td>${zona}</td>
+            <td>${area.actividad || "-"}</td>
             <td class="${clase}">${p.estado}</td>
             <td>
 
