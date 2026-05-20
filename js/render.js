@@ -225,7 +225,9 @@ lucide.createIcons();
 
     // 🔥 INSIGHT
     let porcentaje = ((ocupadas/lista.length)*100).toFixed(1);
-    let disp = (lista.length-ocupadas);
+    let disp = lista.filter(
+    p => p.estado === ESTADOS.VACIA
+).length;
     let textoInsight = "🟢 Baja ocupación";
 
     if(porcentaje > 80){
