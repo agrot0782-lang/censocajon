@@ -95,19 +95,58 @@ function editarTrabajador(key){
         cancelButtonText:'Cancelar',
         confirmButtonColor:'#3085d6',
 
-        didOpen:()=>{
+       didOpen:()=>{
 
-            document.querySelectorAll('.texto-mayus').forEach(input=>{
+    document.querySelectorAll('.texto-mayus').forEach(input=>{
 
-                input.addEventListener('input', function(){
+        input.addEventListener('input', function(){
 
-                    this.value = this.value.toUpperCase();
+            this.value = this.value.toUpperCase();
+
+        });
+
+    });
+
+    // 🔥 AUTOCOMPLETAR POR ID
+    const inputID = document.getElementById('swal-id');
+
+    inputID.addEventListener('blur', ()=>{
+
+        let idBuscado = inputID.value.trim().toUpperCase();
+
+        if(!idBuscado){
+            return;
+        }
+
+        db.ref("censo_cajon")
+        .orderByChild("id")
+        .equalTo(idBuscado)
+        .once("value", snapshot => {
+
+            if(snapshot.exists()){
+
+                snapshot.forEach(child => {
+
+                    let data = child.val();
+
+                    document.getElementById('swal-nombre').value =
+                        data.nombre || '';
+
+                    document.getElementById('swal-apellidos').value =
+                        data.apellidos || '';
+
+                    document.getElementById('swal-sexo').value =
+                        data.sexo || 'MASCULINO';
 
                 });
 
-            });
+            }
 
-        },
+        });
+
+    });
+
+},
 
         preConfirm:()=>{
 
