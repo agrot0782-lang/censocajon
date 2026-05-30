@@ -107,44 +107,44 @@ function editarTrabajador(key){
 
     });
 
-    // 🔥 AUTOCOMPLETAR POR ID
-    const inputID = document.getElementById('swal-id');
+ // 🔥 AUTOCOMPLETAR POR ID
+const inputID = document.getElementById('swal-id');
 
-    inputID.addEventListener('blur', ()=>{
+inputID.addEventListener('blur', ()=>{
 
-        let idBuscado = inputID.value.trim().toUpperCase();
+    let idBuscado = inputID.value.trim().toUpperCase();
 
-        if(!idBuscado){
-            return;
+    if(!idBuscado){
+        return;
+    }
+
+    db.ref("trabajadores/" + idBuscado)
+    .once("value", snapshot => {
+
+        if(snapshot.exists()){
+
+            let data = snapshot.val();
+
+            document.getElementById('swal-nombre').value =
+                data.nombre || '';
+
+            document.getElementById('swal-apellidos').value =
+                ((data.apellido_paterno || '') + ' ' +
+                 (data.apellido_materno || '')).trim();
+
+            document.getElementById('swal-sexo').value =
+                data.sexo || 'MASCULINO';
+
+        } else {
+
+            document.getElementById('swal-nombre').value = '';
+            document.getElementById('swal-apellidos').value = '';
+
         }
 
-        db.ref("censo_cajon")
-        .orderByChild("id")
-        .equalTo(idBuscado)
-        .once("value", snapshot => {
-
-            if(snapshot.exists()){
-
-                snapshot.forEach(child => {
-
-                    let data = child.val();
-
-                    document.getElementById('swal-nombre').value =
-                        data.nombre || '';
-
-                    document.getElementById('swal-apellidos').value =
-                        data.apellidos || '';
-
-                    document.getElementById('swal-sexo').value =
-                        data.sexo || 'MASCULINO';
-
-                });
-
-            }
-
-        });
-
     });
+
+});
 
 },
 
