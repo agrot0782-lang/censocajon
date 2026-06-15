@@ -40,3 +40,39 @@ function vaciarCama(key){
     });
 
 }
+
+
+
+// 🔴 PONER FUERA
+
+function ponerFuera(key){
+
+    let confirmar = confirm(
+        "¿Marcar trabajador como FUERA?"
+    );
+
+    if(!confirmar) return;
+
+    db.ref("censo_cajon/" + key)
+    .update({
+
+        estado:"FUERA"
+
+    })
+
+    .then(()=>{
+
+        console.log("✅ Trabajador marcado como FUERA");
+
+    })
+
+    .catch(error=>{
+
+        console.error(
+            "❌ Error:",
+            error
+        );
+
+    });
+
+}
