@@ -135,6 +135,18 @@ ${autenticado ? `
         <i data-lucide="bed-single"></i>
     </button>
 
+<button
+style="
+background:#ef4444;
+color:white;
+"
+onclick="ponerFuera('${p.key}')">
+
+Fuera
+
+</button>
+
+
 ` : ``}
 
 </td>
@@ -339,16 +351,7 @@ ${autenticado ? `
 
 </div>
 
-<button
-style="
-background:#ef4444;
-color:white;
-"
-onclick="ponerFuera('${p.key}')">
 
-Fuera
-
-</button>
 
 ` : ``}
     </div>
