@@ -53,6 +53,7 @@ th:last-child{
     display:flex;
     flex-direction:column;
     gap:20px;
+    
 }
 
 .left-panel{
@@ -294,6 +295,7 @@ td button:hover{
 
     min-height:100vh;
 
+     overflow-x:auto;
 }
 
 /* 🔥 SIDEBAR */
@@ -302,6 +304,8 @@ td button:hover{
 
     width:280px;
 
+     min-width:280px;
+    
     overflow-y:auto;
 
     background:
@@ -435,7 +439,8 @@ td button:hover{
     flex:1;
 
     padding:20px;
-
+    
+    min-width:0;
 }
 /* 🔥 INSIGHT */
 
