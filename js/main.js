@@ -181,3 +181,44 @@ sessionStorage.setItem(
 
 }
 
+
+function eliminarRegistro(key) {
+
+    Swal.fire({
+        title: "¿Eliminar trabajador?",
+        text: "Este registro se eliminará permanentemente.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, borrar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#dc2626"
+    }).then((result) => {
+
+        if (!result.isConfirmed) return;
+
+        db.ref("censo/" + key).remove()
+
+        .then(() => {
+
+            Swal.fire({
+                icon: "success",
+                title: "Registro eliminado",
+                timer: 1200,
+                showConfirmButton: false
+            });
+
+        })
+
+        .catch(error => {
+
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: error.message
+            });
+
+        });
+
+    });
+
+}
