@@ -11,7 +11,7 @@ function vaciarCama(key){
 
     // 🔥 LIMPIAR CAMA
     db.ref("censo_cajon/" + key)
-    .delete({
+    .update({
 
         id:"",
         nombre:"",
