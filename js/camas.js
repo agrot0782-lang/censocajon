@@ -41,34 +41,43 @@ function vaciarCama(key){
 
 }
 
-// 🔴 PONER FUERA
+function eliminarRegistro(key){
 
-function ponerFuera(key){
+    Swal.fire({
+        title: "¿Eliminar trabajador?",
+        text: "El registro será eliminado permanentemente.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, borrar",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#dc2626"
+    }).then((result)=>{
 
-    let confirmar = confirm(
-        "¿Marcar trabajador como FUERA?"
-    );
+        if(!result.isConfirmed) return;
 
-    if(!confirmar) return;
+        db.ref("censo_cajon/" + key)
+        .remove()
 
-    db.ref("censo_cajon/" + key)
-    .update({
+        .then(()=>{
 
-        estado:"FUERA"
+            Swal.fire({
+                icon:"success",
+                title:"Registro eliminado",
+                timer:1200,
+                showConfirmButton:false
+            });
 
-    })
-    .then(()=>{
+        })
 
-        console.log("✅ Trabajador marcado como FUERA");
+        .catch(error=>{
 
-    })
+            Swal.fire({
+                icon:"error",
+                title:"Error",
+                text:error.message
+            });
 
-    .catch(error=>{
-
-        console.error(
-            "❌ Error:",
-            error
-        );
+        });
 
     });
 
