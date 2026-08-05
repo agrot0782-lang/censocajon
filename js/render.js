@@ -136,12 +136,12 @@ ${autenticado ? `
     </button>
 <button
 style="
-background:#ef4444;
+background:#dc2626;
 color:white;
 "
 onclick="eliminarRegistro('${p.key}')">
 
-ELIMINAR
+🗑️ Borrar
 
 </button>
 
