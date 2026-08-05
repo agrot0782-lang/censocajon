@@ -180,3 +180,46 @@ sessionStorage.setItem(
     });
 
 }
+
+function borrarTodo() {
+
+    Swal.fire({
+        title: "¿Reiniciar censo?",
+        text: "Se eliminarán TODOS los registros. Esta acción no se puede deshacer.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, borrar todo",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#d33"
+    }).then((result) => {
+
+        if (!result.isConfirmed) return;
+
+        db.ref("censo").remove()
+
+        .then(() => {
+
+            datos = [];
+            render();
+
+            Swal.fire({
+                icon: "success",
+                title: "Censo reiniciado",
+                text: "Todos los registros fueron eliminados."
+            });
+
+        })
+
+        .catch((error) => {
+
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: error.message
+            });
+
+        });
+
+    });
+
+}
