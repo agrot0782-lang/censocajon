@@ -139,9 +139,9 @@ style="
 background:#ef4444;
 color:white;
 "
-onclick="ponerFuera('${p.key}')">
+onclick="eliminarRegistro('${p.key}')">
 
-Fuera
+ELIMINAR
 
 </button>
 
