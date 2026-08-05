@@ -56,7 +56,7 @@ function eliminarRegistro(key){
         if(!result.isConfirmed) return;
 
         db.ref("censo_cajon/" + key)
-        .remove()
+        .delete()
 
         .then(()=>{
 
